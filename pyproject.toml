@@ -13,3 +13,6 @@ bean-web = "beancount_toolbox.web:main"
 [tool.setuptools.dynamic]
 version = {attr = "beancount_toolbox.__version__"}
 dependencies = {file = "requirements.txt"}
+
+[tool.pytest.ini_options]
+pythonpath = "."
