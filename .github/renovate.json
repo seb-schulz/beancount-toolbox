@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "baseBranches": ["main"],
+  "rebaseWhen": "conflicted",
+  "packageRules": [
+    {
+      "managers": ["pip-compile"],
+      "groupName": "python-packages"
+    }
+  ],
+  "pip-compile": {
+    "fileMatch": ["(^|/)requirements\\.txt$"],
+    "enabled": true
+  },
+  "pip_requirements": {
+    "enabled": false
+  },
+  "pip_setup": {
+    "enabled": false
+  }
+}

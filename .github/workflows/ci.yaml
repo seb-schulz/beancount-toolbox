@@ -7,11 +7,13 @@ on:
       - main
     paths-ignore:
       - "README*"
+      - .github/renovate.json
   pull_request:
     branches:
       - main
     paths-ignore:
       - "README*"
+      - .github/renovate.json
 jobs:
   build:
     runs-on: ubuntu-latest
