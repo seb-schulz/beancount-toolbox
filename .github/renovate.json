@@ -6,6 +6,11 @@
     {
       "managers": ["pip-compile"],
       "groupName": "python-packages"
+    },
+    {
+      "managers": ["pip-compile"],
+      "matchPackageNames": ["beancount"],
+      "allowedVersions": "<3.0"
     }
   ],
   "pip-compile": {
