@@ -1,9 +1,8 @@
 import unittest
 
 from beancount import loader
-from beancount.parser import printer, cmptest
+from beancount.parser import cmptest
 from beancount.core import amount
-import textwrap
 from beancount_toolbox import spread_pad
 from datetime import date
 
