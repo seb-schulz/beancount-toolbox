@@ -1,0 +1,15 @@
+[project]
+name = "beancount-toolbox"
+dynamic = ["version","dependencies"]
+requires-python = ">=3.11"
+maintainers = [
+  {name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com"}
+]
+[project.scripts]
+rofi-bean = "rofi_bean:main"
+bean-check = "beancount.scripts.check:main"
+bean-web = "beancount_toolbox.web:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "beancount_toolbox.__version__"}
+dependencies = {file = "requirements.txt"}
