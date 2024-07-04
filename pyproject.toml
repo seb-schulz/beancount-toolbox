@@ -8,7 +8,7 @@ maintainers = [
 [project.scripts]
 rofi-bean = "rofi_bean:main"
 bean-check = "beancount.scripts.check:main"
-bean-web = "beancount_toolbox.web:main"
+bean-web = "beancount_toolbox.cli.web:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "beancount_toolbox.__version__"}
