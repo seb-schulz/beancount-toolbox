@@ -3,24 +3,7 @@
   "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
   "packageRules": [
-    {
-      "managers": ["pip-compile"],
-      "groupName": "python-packages"
-    },
-    {
-      "managers": ["pip-compile"],
-      "matchPackageNames": ["beancount"],
-      "allowedVersions": "<3.0"
-    }
-  ],
-  "pip-compile": {
-    "fileMatch": ["(^|/)requirements\\.txt$"],
-    "enabled": true
-  },
-  "pip_requirements": {
-    "enabled": false
-  },
-  "pip_setup": {
-    "enabled": false
-  }
+    { "matchManagers": ["pip_requirements"], "groupName": "python-packages" },
+    { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" }
+  ]
 }
