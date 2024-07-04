@@ -1,20 +1,23 @@
 # https://auto-depreciation.readthedocs.io/en/latest/
 """Fixed assets depreciation plugin for beancount."""
-import re, sys
+import re
+import sys
 from collections import namedtuple
 
 from beancount import loader
 from beancount.core import account, amount, convert, data, getters
-from beancount.core.number import Decimal
+from beancount.core.number import D, Decimal
 from beancount.parser import printer
 from dateutil.relativedelta import relativedelta
 from dateutil.utils import today
-from beancount.core.number import D
 
 __plugins__ = ['auto_depreciation']
 __author__ = 'hktkzyx <hktkzyx@qq.com>'
 
-AutoDepreciationError = namedtuple('AutoDepreciationError', 'source message entry')
+AutoDepreciationError = namedtuple(
+    'AutoDepreciationError',
+    'source message entry',
+)
 
 
 def auto_depreciation(entries, options_map, config=None):
@@ -74,7 +77,8 @@ def auto_depreciation(entries, options_map, config=None):
             for posting in entry.postings:
                 is_child = account.parent_matcher(assets_account)
 
-                if (posting.meta and 'useful_life' in posting.meta and is_child(posting.account)):
+                if (posting.meta and 'useful_life' in posting.meta
+                        and is_child(posting.account)):
                     cost = posting.cost
                     currency = cost.currency
                     original_value = D(cost.number)
@@ -84,7 +88,8 @@ def auto_depreciation(entries, options_map, config=None):
                         end_value = DEFAULT_RESIDUAL_VALUE
                     label = cost.label
                     buy_date = cost.date
-                    m = re.match(r'([0-9]+)([my])', str.lower(posting.meta['useful_life']))
+                    m = re.match(r'([0-9]+)([my])',
+                                 str.lower(posting.meta['useful_life']))
                     months_or_years = m.group(2)
                     months = int(m.group(1))
                     if months_or_years == 'y':
@@ -96,8 +101,11 @@ def auto_depreciation(entries, options_map, config=None):
                         if date > today().date():
                             break
                         pos_sell = _posting_to_sell(latest_pos)
-                        pos_buy = _posting_to_buy(latest_pos, date, current_values[i])
-                        sub_expenses_account = '{}{}'.format(expenses_account, posting.account[len(assets_account):])
+                        pos_buy = _posting_to_buy(latest_pos, date,
+                                                  current_values[i])
+                        sub_expenses_account = '{}{}'.format(
+                            expenses_account,
+                            posting.account[len(assets_account):])
                         new_accounts.add(sub_expenses_account)
                         pos_expense = _posting_to_expense(
                             latest_pos,
@@ -107,7 +115,8 @@ def auto_depreciation(entries, options_map, config=None):
                         )
                         latest_pos = pos_buy
                         new_pos = [pos_sell, pos_buy, pos_expense]
-                        depreciation_entries.append(_auto_entry(entry, date, label, *new_pos))
+                        depreciation_entries.append(
+                            _auto_entry(entry, date, label, *new_pos))
     # Create Open directives for new subaccounts if necessary.
     oc_map = getters.get_account_open_close(entries)
 
@@ -156,10 +165,15 @@ def depreciation_list(start_value, end_value, buy_date, months, method):
         'linear': linear,
     }
     get_current_value = methods[method]
-    dates_list = [buy_date + relativedelta(months=x) for x in range(1, months + 1)]
+    dates_list = [
+        buy_date + relativedelta(months=x) for x in range(1, months + 1)
+    ]
     days_list = [(x - buy_date).days for x in dates_list]
     depreciation_days = days_list[-1]
-    current_values = [get_current_value(x, start_value, end_value, depreciation_days) for x in days_list]
+    current_values = [
+        get_current_value(x, start_value, end_value, depreciation_days)
+        for x in days_list
+    ]
     depreciation_values = []
     for i, value in enumerate(current_values):
         previous_value = current_values[i - 1] if not i == 0 else start_value
@@ -298,14 +312,17 @@ def _auto_entry(entry, date, label, *args):
     """
     narration = entry.narration
     if narration and label:
-        new_narration = ''.join([entry.narration, '-auto_depreciation:', label])
+        new_narration = ''.join(
+            [entry.narration, '-auto_depreciation:', label])
     elif narration:
         new_narration = entry.narration + '-auto_depreciation'
     elif label:
         new_narration = 'auto_depreciation:' + label
     else:
         new_narration = 'auto_depreciation'
-    return entry._replace(date=date, narration=new_narration, postings=list(args))
+    return entry._replace(date=date,
+                          narration=new_narration,
+                          postings=list(args))
 
 
 if __name__ == "__main__":
