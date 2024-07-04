@@ -8,7 +8,7 @@ class TestLeafOnly(unittest.TestCase):
     @loader.load_doc(expect_errors=True)
     def test_leaf_only1(self, _, errors, __):
         """
-            plugin "beancount_toolbox.leafonly"
+            plugin "beancount_toolbox.plugins.leafonly"
 
             2011-01-01 open Expenses:Food
             2011-01-01 open Expenses:Food:Restaurant
@@ -29,7 +29,7 @@ class TestLeafOnly(unittest.TestCase):
     @loader.load_doc(expect_errors=True)
     def test_leaf_only2(self, _, errors, __):
         """
-            plugin "beancount_toolbox.leafonly"
+            plugin "beancount_toolbox.plugins.leafonly"
 
             ;;; 2011-01-01 open Expenses:Food
             2011-01-01 open Expenses:Food:Restaurant
@@ -50,7 +50,7 @@ class TestLeafOnly(unittest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_leaf_only4(self, _, errors, __):
         """
-            ;;plugin "beancount_toolbox.leafonly"
+            ;;plugin "beancount_toolbox.plugins.leafonly"
 
             2011-01-01 open Assets:Investments
             2011-01-01 open Assets:Investments:Shares

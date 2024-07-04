@@ -3,7 +3,7 @@ import unittest
 from beancount import loader
 from beancount.parser import cmptest
 from beancount.core import amount
-from beancount_toolbox import spread_pad
+from beancount_toolbox.plugins import spread_pad
 from datetime import date
 
 
@@ -159,7 +159,7 @@ class SpreadPadOnly(cmptest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_spread_one_pad_auto_no_error(self, entires, errors, options_map):
         """
-            plugin "beancount_toolbox.spread_pad"
+            plugin "beancount_toolbox.plugins.spread_pad"
 
             2011-01-01 open Assets:Cash
             2011-01-01 open Expenses:Misc
@@ -203,7 +203,7 @@ class SpreadPadOnly(cmptest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_spread_with_gaps(self, entires, errors, options_map):
         """
-        plugin "beancount_toolbox.spread_pad"
+        plugin "beancount_toolbox.plugins.spread_pad"
 
         2011-01-01 open Assets:Cash
         2011-01-01 open Expenses:Misc
@@ -245,7 +245,7 @@ class SpreadPadOnly(cmptest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_spread_with_gaps_of_a_week(self, entires, errors, options_map):
         """
-        plugin "beancount_toolbox.spread_pad"
+        plugin "beancount_toolbox.plugins.spread_pad"
 
         2011-01-01 open Assets:Cash
         2011-01-01 open Expenses:Misc
@@ -283,7 +283,7 @@ class SpreadPadOnly(cmptest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_spread_one_pad_auto_no_error2(self, entires, errors, options_map):
         """
-            plugin "beancount_toolbox.spread_pad"
+            plugin "beancount_toolbox.plugins.spread_pad"
 
             2011-01-01 open Assets:Cash
             2011-01-01 open Expenses:Misc
@@ -353,7 +353,7 @@ class SpreadPadOnly(cmptest.TestCase):
     def test_spread_pad_auto_multiple_currency(self, entires, errors,
                                                options_map):
         """
-            plugin "beancount_toolbox.spread_pad"
+            plugin "beancount_toolbox.plugins.spread_pad"
 
             2011-01-01 open Assets:Cash
             2011-01-01 open Expenses:Misc

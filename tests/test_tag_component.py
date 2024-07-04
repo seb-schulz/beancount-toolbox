@@ -7,7 +7,7 @@ class SpreadPadOnly(cmptest.TestCase):
     @loader.load_doc(expect_errors=False)
     def test_spread_one_pad_auto_no_error(self, entires, errors, options_map):
         """
-            plugin "beancount_toolbox.tag_component" "Foobar"
+            plugin "beancount_toolbox.plugins.tag_component" "Foobar"
 
             2011-01-01 open Assets:Cash:Foobar
             2011-01-01 open Assets:Cash:Baz
