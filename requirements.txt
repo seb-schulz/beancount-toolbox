@@ -8,15 +8,15 @@ beancount==2.3.6
     # via
     #   -r requirements.in
     #   beancount-reds-plugins
-beancount-reds-plugins==0.2.0
+beancount-reds-plugins==0.3.0
     # via -r requirements.in
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
     # via beancount
 bottle==0.12.25
     # via beancount
 cachetools==5.3.3
     # via google-auth
-certifi==2024.6.2
+certifi==2024.7.4
     # via requests
 chardet==5.2.0
     # via beancount
