@@ -5,8 +5,12 @@
 #    pip-compile requirements.in
 #
 beancount==2.3.6
+    # via
+    #   -r requirements.in
+    #   beancount-reds-plugins
+beancount-reds-plugins==0.2.0
     # via -r requirements.in
-beautifulsoup4==4.12.3
+beautifulsoup4==4.12.2
     # via beancount
 bottle==0.12.25
     # via beancount
