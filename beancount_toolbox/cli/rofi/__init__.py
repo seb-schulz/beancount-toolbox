@@ -14,6 +14,7 @@ from beancount import loader
 from beancount.core import getters, account_types, realization, convert, data, inventory
 from beancount.utils import misc_utils
 import dateutil
+from importlib.resources import files
 
 
 def xdg_config_home() -> pathlib.Path:
@@ -232,7 +233,7 @@ def main():
             stdout = subprocess.run(
                 [
                     'rofi', '-dmenu', '-markup-rows', '-i', '-theme',
-                    str(pathlib.Path(__file__).parent / 'default.rosi'),
+                    files('beancount_toolbox.data').joinpath('default.rasi'),
                     '-kb-custom-1', 'Control+s'
                 ] + view_stack[-1].rofi_args(),
                 input="\n".join(view_stack[-1].rofi_input()),

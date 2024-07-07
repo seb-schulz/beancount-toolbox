@@ -14,5 +14,8 @@ bean-web = "beancount_toolbox.cli.web:main"
 version = {attr = "beancount_toolbox.__version__"}
 dependencies = {file = "requirements.txt"}
 
+[tool.setuptools.package-data]
+"beancount_toolbox.data" = ["*.rasi"]
+
 [tool.pytest.ini_options]
 pythonpath = "."
