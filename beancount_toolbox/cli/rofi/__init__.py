@@ -1,20 +1,25 @@
 import argparse
+import calendar
+import dataclasses
+import datetime
 import os
 import pathlib
 import subprocess
 import sys
 import typing
-import dataclasses
+import uuid
+from importlib.resources import files
 
+import dateutil
 import dateutil.relativedelta
 import pydantic
 import yaml
-from pydantic.dataclasses import dataclass
 from beancount import loader
-from beancount.core import getters, account_types, realization, convert, data, inventory
+from beancount.core import (convert, data, flags, getters, inventory,
+                            realization)
+from beancount.parser import printer
 from beancount.utils import misc_utils
-import dateutil
-from importlib.resources import files
+from pydantic.dataclasses import dataclass
 
 
 def xdg_config_home() -> pathlib.Path:
@@ -29,17 +34,29 @@ DEFAULT_CONFIG_PATHS = [
 
 
 @dataclass
+class BeanfileConfig:
+    main: pathlib.Path
+    add_to: pathlib.Path
+
+
+@dataclass
 class Config:
     default: pathlib.Path
-    beanfiles: typing.List[pathlib.Path] = dataclasses.field(
+    beanfiles: typing.List[BeanfileConfig] = dataclasses.field(
         default_factory=lambda: [])
 
     @pydantic.model_validator(mode='after')
     def validate_default_value(self):
-        if self.default not in self.beanfiles:
+        if self.default not in [x.main for x in self.beanfiles]:
             raise ValueError('incorrect default value {!r}'.format(
                 str(self.default)))
         return self
+
+    @property
+    def current_beanfile(self) -> BeanfileConfig:
+        for c in self.beanfiles:
+            if c.main == self.default:
+                return c
 
 
 def read_config_file(file: pathlib.Path):
@@ -67,16 +84,30 @@ def read_config_file(file: pathlib.Path):
 
 class ViewStack(list):
 
-    def __init__(self, beanfile):
-        self._load(beanfile)
+    @property
+    def theme(self):
+        return self[-1].theme
 
-    def reload(self, beanfile):
-        self._load(beanfile)
+    @property
+    def current_view(self):
+        return self[-1]
 
-    def _load(self, beanfile):
-        entries, _errors, _options = loader.load_file(beanfile)
+    def __init__(self, config: BeanfileConfig):
+        self._config = config
+        self._load()
+
+    def reload(self, config: BeanfileConfig = None):
+        if config is not None:
+            self._config = config
+        self._load()
+
+    def _load(self):
+        self.entries, _errors, _options = loader.load_file(self._config.main)
         self.clear()
-        self.append(ListAccountsView(entries))
+        self.append(ListAccountsView(self.entries))
+
+    def message(self):
+        return self[-1].message
 
     def push(self, view):
         self.append(view)
@@ -86,9 +117,12 @@ class ViewStack(list):
 
 
 class BaseView:
+    key_bindings = []
+    message = None
+    theme = 'default.rasi'
 
     def rofi_args(self) -> typing.List[str]:
-        raise NotImplementedError('requires implementation of sub class')
+        return []
 
     def rofi_input(self) -> typing.Iterable[str]:
         return []
@@ -112,7 +146,7 @@ class ListAccountsView(BaseView):
         self.input = list(realization.iter_children(root, leaf_only=True))
 
     def rofi_args(self) -> typing.List[str]:
-        return ['-mesg', 'Hello\nworld', '-format', 'i', '-matching', 'fuzzy']
+        return ['-format', 'i', '-matching', 'fuzzy']
 
     def rofi_input(self) -> typing.Iterable[str]:
         for x in self.input:
@@ -166,11 +200,12 @@ class JournalView(BaseView):
 
         self.input = list(reversed(grouped_input.items()))
 
+    @property
+    def message(self):
+        return f'Account: {self.selected_account}'
+
     def rofi_args(self) -> typing.List[str]:
-        return [
-            '-mesg', f'Account: {self.selected_account}', '-format', 'i',
-            '-matching', 'prefix'
-        ]
+        return ['-format', 'i', '-matching', 'prefix']
 
     def rofi_input(self) -> typing.Iterable[str]:
         for date, inv in self.input:
@@ -193,19 +228,234 @@ class JournalView(BaseView):
 
 
 class SelectBeanFile(BaseView):
+    message = 'Select bean file'
 
-    def __init__(self, beanfiles):
-        self.beanfiles = beanfiles
+    def __init__(self, config):
+        self.config: Config = config
 
     def rofi_args(self) -> typing.List[str]:
-        return ['-mesg', 'Select bean file', '-matching', 'fuzzy']
+        return ['-matching', 'fuzzy', '-format', 'i']
 
     def rofi_input(self) -> typing.Iterable[str]:
-        for path in self.beanfiles:
-            yield str(path)
+        for c in self.config.beanfiles:
+            yield str(c.main)
 
     def on_selected(self, viewstack: ViewStack, stdout):
-        viewstack.reload(stdout)
+        viewstack.reload(self.config.beanfiles[int(stdout)])
+
+
+class AddEntryDatePickerView(BaseView):
+    message = 'Add entry - pick date'
+    theme = 'calendar.rasi'
+
+    def __init__(self):
+        now = datetime.datetime.now()
+        cal = calendar.Calendar()
+
+        self.calendar_input = [
+            (f'{w}\0nonselectable\x1ftrue', '')
+            for w in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        ]
+
+        for i in reversed(range(0, 3)):
+            for y, m, d in cal.itermonthdays3(now.year, now.month - i):
+                if d == 0:
+                    self.calendar_input.append(('\0nonselectable\x1ftrue', ''))
+                else:
+                    self.calendar_input.append((
+                        f'{d:02d}\0meta\x1f{y}-{m:02d}-{d:02d}',
+                        f'{y}-{m:02d}-{d:02d}',
+                    ))
+
+    def rofi_args(self) -> typing.List[str]:
+        today = '{:%F}'.format(datetime.datetime.now())
+        idx = [i for i, x in enumerate(self.calendar_input)
+               if x[1] == today][0]
+        return ['-format', 'i', '-a', str(idx)]
+
+    def rofi_input(self) -> typing.Iterable[str]:
+        return [x[0] for x in self.calendar_input]
+
+    def on_selected(self, viewstack: ViewStack, stdout):
+        viewstack.push(
+            AddEntryPayeeAndNarrationPickerView(
+                self.calendar_input[int(stdout)][1]))
+
+
+class AddEntryPayeeAndNarrationPickerView(BaseView):
+
+    def __init__(self, date):
+        self.date = date
+
+    @property
+    def message(self):
+        return f'Add entry on {self.date} - enter payee and narration split by |'
+
+    def rofi_args(self) -> typing.List[str]:
+        return []
+
+    def rofi_input(self) -> typing.Iterable[str]:
+        return []
+
+    def on_selected(self, viewstack: ViewStack, stdout):
+        items = stdout.split('|', 1)
+        if len(items) > 1:
+            payee, narration = items
+        else:
+            payee, narration = None, items[0]
+
+        viewstack.push(
+            AddEntryAccountPickerView(
+                viewstack.entries,
+                date=self.date,
+                payee=payee,
+                narration=narration,
+            ))
+
+
+class AddEntryAccountPickerView(BaseView):
+    key_bindings = ['Control+Return']
+
+    def __init__(self, entries, *, date, payee, narration, postings=[]):
+        self.entries = entries
+        self.date = date
+        self.payee, self.narration = payee, narration
+        self.postings = postings
+
+    @property
+    def message(self):
+        entry = data.Transaction(
+            # {'uuid': str(uuid.uuid4())},
+            {},
+            self.date,
+            flags.FLAG_OKAY,
+            self.payee,
+            self.narration,
+            data.EMPTY_SET,
+            data.EMPTY_SET,
+            self.postings,
+        )
+        return '{0}\nAdd entry - pick account'.format(
+            printer.format_entry(entry))
+
+    def rofi_args(self) -> typing.List[str]:
+        return ['-kb-accept-custom', 'Control+Shift+Alt+Return']
+
+    def rofi_input(self) -> typing.Iterable[str]:
+        return list(getters.get_accounts(self.entries))
+
+    def on_key(self, viewstack: ViewStack, key_idx: int):
+        if key_idx == 0:
+            idx = -1
+            inv = inventory.Inventory()
+            for i, p in enumerate(self.postings):
+                if p.units is None:
+                    idx = i
+                else:
+                    inv.add_position(p)
+            if idx >= 0:
+                amount = -data.Amount.from_string(
+                    inv.reduce(convert.get_cost).to_string(parens=False))
+                self.postings[idx] = data.create_simple_posting(
+                    None,
+                    self.postings[idx].account,
+                    amount.number,
+                    amount.currency,
+                )
+
+            entry = data.Transaction(
+                {'uuid': str(uuid.uuid4())},
+                self.date,
+                flags.FLAG_OKAY,
+                self.payee,
+                self.narration,
+                data.EMPTY_SET,
+                data.EMPTY_SET,
+                self.postings,
+            )
+
+            with open(os.path.expanduser(viewstack._config.add_to), 'a') as fp:
+                print(
+                    '\n{}'.format(printer.format_entry(entry).strip()),
+                    file=fp,
+                )
+            viewstack.reload()
+
+    def on_selected(self, viewstack: ViewStack, stdout):
+
+        viewstack.push(
+            AddEntryNumberPickerView(
+                self.entries,
+                stdout,
+                date=self.date,
+                payee=self.payee,
+                narration=self.narration,
+                postings=self.postings,
+            ))
+
+
+class AddEntryNumberPickerView(BaseView):
+
+    def __init__(self,
+                 entries,
+                 account,
+                 *,
+                 date,
+                 payee,
+                 narration,
+                 postings=[]):
+        self.entries = entries
+        self.account = account
+        self.date = date
+        self.payee, self.narration = payee, narration
+        self.postings = postings
+
+    @property
+    def message(self):
+        entry = data.Transaction(
+            # {'uuid': str(uuid.uuid4())},
+            {},
+            self.date,
+            flags.FLAG_OKAY,
+            self.payee,
+            self.narration,
+            data.EMPTY_SET,
+            data.EMPTY_SET,
+            self.postings,
+        )
+        return '{0}\nAdd entry - enter numer for {1}'.format(
+            printer.format_entry(entry), self.account)
+
+    def rofi_args(self) -> typing.List[str]:
+        return []
+
+    def rofi_input(self) -> typing.Iterable[str]:
+        return []
+
+    def on_selected(self, viewstack: ViewStack, stdout):
+        postings = list(self.postings)
+
+        if len(stdout) == 0 or stdout == 'x':
+            postings.append(
+                data.create_simple_posting(None, self.account, None, None))
+        else:
+            amount = data.Amount.from_string(stdout)
+            postings.append(
+                data.create_simple_posting(
+                    None,
+                    self.account,
+                    amount.number,
+                    amount.currency,
+                ))
+
+        viewstack.push(
+            AddEntryAccountPickerView(
+                self.entries,
+                date=self.date,
+                payee=self.payee,
+                narration=self.narration,
+                postings=postings,
+            ))
 
 
 def main():
@@ -226,17 +476,33 @@ def main():
         )
         sys.exit(1)
 
-    view_stack = ViewStack(config.default)
+    view_stack = ViewStack(config.current_beanfile)
 
     while len(view_stack) > 0:
         try:
+            args = [
+                'rofi', '-dmenu', '-markup-rows', '-i', '-theme',
+                files('beancount_toolbox.data').joinpath(view_stack.theme),
+                '-kb-custom-1', 'Control+s', '-kb-custom-2', 'Control+a',
+                '-kb-move-front', 'Control+Shift+a'
+            ]
+            default_msg = '<small><b>Switch file</b> (Ctrl+s), <b>Add entry</b> (Ctrl+a)</small>'
+            msg = view_stack.message()
+            if msg is not None:
+                args.extend(['-mesg', f'{msg}\n{default_msg}'])
+            else:
+                args.extend(['-mesg', default_msg])
+            args.extend(view_stack.current_view.rofi_args())
+
+            for i, kb in enumerate(
+                    view_stack.current_view.key_bindings,
+                    start=3,
+            ):
+                args.extend([f'-kb-custom-{i}', kb])
+
             stdout = subprocess.run(
-                [
-                    'rofi', '-dmenu', '-markup-rows', '-i', '-theme',
-                    files('beancount_toolbox.data').joinpath('default.rasi'),
-                    '-kb-custom-1', 'Control+s'
-                ] + view_stack[-1].rofi_args(),
-                input="\n".join(view_stack[-1].rofi_input()),
+                args,
+                input="\n".join(view_stack.current_view.rofi_input()),
                 capture_output=True,
                 check=True,
                 text=True,
@@ -247,7 +513,12 @@ def main():
             if err.returncode == 1:
                 view_stack.pop()
             elif err.returncode == 10:
-                view_stack.push(SelectBeanFile(config.beanfiles))
+                view_stack.push(SelectBeanFile(config))
+            elif err.returncode == 11:
+                view_stack.push(AddEntryDatePickerView())
+            elif 12 <= err.returncode < 12 + len(
+                    view_stack.current_view.key_bindings):
+                view_stack.current_view.on_key(view_stack, err.returncode - 12)
             else:
                 raise err
     sys.exit()

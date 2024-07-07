@@ -1,0 +1,12 @@
+@theme "default"
+
+entry {
+    enabled: false;
+}
+
+listview {
+    columns: 16;
+    lines: 7;
+    fixed-height: true;
+    fixed-columns: true;
+}
