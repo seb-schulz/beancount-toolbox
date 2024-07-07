@@ -4,6 +4,8 @@
 #
 #    pip-compile
 #
+annotated-types==0.7.0
+    # via pydantic
 beancount==2.3.6
     # via
     #   -r requirements.in
@@ -66,6 +68,10 @@ pyasn1==0.6.0
     #   rsa
 pyasn1-modules==0.4.0
     # via google-auth
+pydantic==2.8.2
+    # via -r requirements.in
+pydantic-core==2.20.1
+    # via pydantic
 pyparsing==3.1.2
     # via httplib2
 pytest==8.2.2
@@ -88,6 +94,10 @@ six==1.16.0
     #   python-dateutil
 soupsieve==2.5
     # via beautifulsoup4
+typing-extensions==4.12.2
+    # via
+    #   pydantic
+    #   pydantic-core
 uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.2.2

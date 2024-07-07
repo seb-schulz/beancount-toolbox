@@ -6,7 +6,7 @@ maintainers = [
   {name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com"}
 ]
 [project.scripts]
-rofi-bean = "rofi_bean:main"
+bean-rofi = "beancount_toolbox.cli.rofi:main"
 bean-check = "beancount.scripts.check:main"
 bean-web = "beancount_toolbox.cli.web:main"
 

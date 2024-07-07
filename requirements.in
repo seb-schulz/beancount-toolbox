@@ -1,3 +1,4 @@
 beancount<3.0,>=2.3
 beancount-reds-plugins
 pyyaml
+pydantic
