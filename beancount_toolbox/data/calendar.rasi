@@ -5,7 +5,7 @@ entry {
 }
 
 listview {
-    columns: 16;
+    columns: 15;
     lines: 7;
     fixed-height: true;
     fixed-columns: true;

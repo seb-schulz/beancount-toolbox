@@ -252,34 +252,41 @@ class AddEntryDatePickerView(BaseView):
         now = datetime.datetime.now()
         cal = calendar.Calendar()
 
-        self.calendar_input = [
-            (f'{w}\0nonselectable\x1ftrue', '')
+        self.calendar_input = {
+            w: f'{w}\0nonselectable\x1ftrue'
             for w in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-        ]
+        }
+
+        self.active_rows = set()
+        idx = len(self.calendar_input)
 
         for i in reversed(range(0, 3)):
-            for y, m, d in cal.itermonthdays3(now.year, now.month - i):
-                if d == 0:
-                    self.calendar_input.append(('\0nonselectable\x1ftrue', ''))
-                else:
-                    self.calendar_input.append((
-                        f'{d:02d}\0meta\x1f{y}-{m:02d}-{d:02d}',
-                        f'{y}-{m:02d}-{d:02d}',
-                    ))
+            cur = now + dateutil.relativedelta.relativedelta(months=-i)
+            for y, m, d in cal.itermonthdays3(cur.year, cur.month):
+                k = f'{y}-{m:02d}-{d:02d}'
+                if k in self.calendar_input:
+                    continue
+
+                v = f'{d:02d}\0meta\x1f{y}-{m:02d}-{d:02d}'
+                self.calendar_input[k] = v
+
+                if d == 1:
+                    self.active_rows.add(f'{idx}')
+                if now.year == y and now.month == m and now.day == d:
+                    self.active_rows.add(f'{idx}')
+
+                idx += 1
 
     def rofi_args(self) -> typing.List[str]:
-        today = '{:%F}'.format(datetime.datetime.now())
-        idx = [i for i, x in enumerate(self.calendar_input)
-               if x[1] == today][0]
-        return ['-format', 'i', '-a', str(idx)]
+        return ['-format', 'i', '-a', ','.join(self.active_rows)]
 
     def rofi_input(self) -> typing.Iterable[str]:
-        return [x[0] for x in self.calendar_input]
+        return list(self.calendar_input.values())
 
     def on_selected(self, viewstack: ViewStack, stdout):
         viewstack.push(
             AddEntryPayeeAndNarrationPickerView(
-                self.calendar_input[int(stdout)][1]))
+                list(self.calendar_input.keys())[int(stdout)]))
 
 
 class AddEntryPayeeAndNarrationPickerView(BaseView):
