@@ -422,7 +422,6 @@ class AddEntryNumberPickerView(BaseView):
     @property
     def message(self):
         entry = data.Transaction(
-            # {'uuid': str(uuid.uuid4())},
             {},
             self.date,
             flags.FLAG_OKAY,
@@ -436,7 +435,7 @@ class AddEntryNumberPickerView(BaseView):
             printer.format_entry(entry), self.account)
 
     def rofi_args(self) -> typing.List[str]:
-        return ['-p', 'amount']
+        return ['-p', f'{self.account}\t']
 
     def rofi_input(self) -> typing.Iterable[str]:
         return []
