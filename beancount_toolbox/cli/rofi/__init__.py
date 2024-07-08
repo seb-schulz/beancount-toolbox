@@ -278,7 +278,7 @@ class AddEntryDatePickerView(BaseView):
                 idx += 1
 
     def rofi_args(self) -> typing.List[str]:
-        return ['-format', 'i', '-a', ','.join(self.active_rows)]
+        return ['-p', 'date', '-format', 'i', '-a', ','.join(self.active_rows)]
 
     def rofi_input(self) -> typing.Iterable[str]:
         return list(self.calendar_input.values())
@@ -299,7 +299,7 @@ class AddEntryPayeeAndNarrationPickerView(BaseView):
         return f'Add entry on {self.date} - enter payee and narration split by |'
 
     def rofi_args(self) -> typing.List[str]:
-        return []
+        return ['-p', 'payee|narration']
 
     def rofi_input(self) -> typing.Iterable[str]:
         return []
@@ -346,7 +346,9 @@ class AddEntryAccountPickerView(BaseView):
             printer.format_entry(entry))
 
     def rofi_args(self) -> typing.List[str]:
-        return ['-kb-accept-custom', 'Control+Shift+Alt+Return']
+        return [
+            '-p', 'account', '-kb-accept-custom', 'Control+Shift+Alt+Return'
+        ]
 
     def rofi_input(self) -> typing.Iterable[str]:
         return list(getters.get_accounts(self.entries))
@@ -434,7 +436,7 @@ class AddEntryNumberPickerView(BaseView):
             printer.format_entry(entry), self.account)
 
     def rofi_args(self) -> typing.List[str]:
-        return []
+        return ['-p', 'amount']
 
     def rofi_input(self) -> typing.Iterable[str]:
         return []
