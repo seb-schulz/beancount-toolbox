@@ -74,7 +74,7 @@ pydantic-core==2.20.1
     # via pydantic
 pyparsing==3.1.2
     # via httplib2
-pytest==8.3.1
+pytest==8.3.2
     # via beancount
 python-dateutil==2.9.0.post0
     # via beancount
