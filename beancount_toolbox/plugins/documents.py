@@ -1,21 +1,27 @@
 __plugins__ = ['documents']
 
-from beancount.core import data, flags
-from os import path
 import os
+import typing
+from os import path
+
+from beancount.core import data, flags
 
 
-def documents(entries, options_map, config=None):
+def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
     if config is None:
-        main_file = options_map.get('filename')
+        main_file = options_map.get('filename', '<empty>')
         if path.isfile(main_file):
-            config = path.join(path.dirname(main_file), 'documents')
+            return path.join(path.dirname(main_file), 'documents')
         else:
-            config = os.getcwd()
+            return os.getcwd()
     else:
         # if path.exists(config) and not path.isabs(config):
         # TODO: Check case with relative path
         pass
+
+
+def documents(entries, options_map: typing.Mapping, config=None):
+    basepath = _basepath_from_config(options_map, config)
 
     errors = []
     new_documents = []
@@ -24,7 +30,7 @@ def documents(entries, options_map, config=None):
         if 'invoice' in entry.meta:
             file = entry.meta['invoice']
             if not path.isabs(file):
-                file = path.join(config, file)
+                file = path.join(basepath, file)
 
             for post in entry.postings:
                 new_documents.append(

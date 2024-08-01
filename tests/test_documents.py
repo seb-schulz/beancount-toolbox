@@ -1,6 +1,8 @@
 import unittest
 
+from os import path
 from beancount import loader
+from beancount_toolbox.plugins import documents
 
 
 class TestDocuments(unittest.TestCase):
@@ -34,6 +36,22 @@ class TestDocuments(unittest.TestCase):
         """
         self.assertEqual(0, len(errors))
         self.assertEqual(5, len(entries))
+
+
+class TestBasePathFromConfig(unittest.TestCase):
+
+    def test_none_values(self):
+        got = documents._basepath_from_config()
+        self.assertEqual(got, path.dirname(path.dirname(__file__)))
+
+    def test_with_option_map_filename(self):
+        pass
+
+    def test_relative_config_path(self):
+        pass
+
+    def test_abs_config_path(self):
+        pass
 
 
 if __name__ == '__main__':
