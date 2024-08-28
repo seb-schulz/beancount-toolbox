@@ -115,6 +115,26 @@ class TestDocuments(unittest.TestCase):
             dates,
         )
 
+    @loader.load_doc()
+    def test_check_file_path(self, entries, errors, __):
+        """
+        plugin "beancount_toolbox.plugins.documents"
+
+        2011-01-01 open Expenses:Food
+        2011-01-01 open Assets:Other
+
+        2011-05-17 * "Something" #tag
+            document: "bean-check"
+            Expenses:Food         2.00 USD
+            Assets:Other         -2.00 USD
+        """
+        self.assertEqual(0, len(errors))
+        self.assertTrue(
+            all([
+                x.filename.endswith('venv/bin/bean-check') for x in entries
+                if isinstance(x, data.Document)
+            ]))
+
 
 class TestBasePathFromConfig(unittest.TestCase):
 

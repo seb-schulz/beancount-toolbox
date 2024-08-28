@@ -23,6 +23,10 @@ def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
 
 def documents(entries, options_map: typing.Mapping, config=None):
     basepath = _basepath_from_config(options_map, config)
+    existing_files = [
+        os.path.join(root[len(basepath) + 1:], f)
+        for root, _, files in os.walk(basepath) for f in files
+    ]
 
     errors = []
     new_documents = []
@@ -39,7 +43,11 @@ def documents(entries, options_map: typing.Mapping, config=None):
                 date = entry.date
 
             if not path.isabs(file):
-                file = path.join(basepath, file)
+                match_list = [x for x in existing_files if x.endswith(file)]
+                if len(match_list) > 0:
+                    file = path.join(basepath, match_list[0])
+                else:
+                    file = path.join(basepath, file)
 
             for acc in getters.get_entry_accounts(entry):
                 new_documents.append(
