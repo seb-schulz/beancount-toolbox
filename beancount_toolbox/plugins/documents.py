@@ -3,6 +3,7 @@ __plugins__ = ['documents']
 import os
 import typing
 from os import path
+import dateutil
 
 from beancount.core import data, getters
 
@@ -32,6 +33,11 @@ def documents(entries, options_map: typing.Mapping, config=None):
                 continue
 
             file = entry.meta[key]
+            try:
+                date = dateutil.parser.isoparse(file.split('.', 1)[0]).date()
+            except ValueError:
+                date = entry.date
+
             if not path.isabs(file):
                 file = path.join(basepath, file)
 
@@ -39,7 +45,7 @@ def documents(entries, options_map: typing.Mapping, config=None):
                 new_documents.append(
                     data.Document(
                         dict(**entry.meta),
-                        entry.date,
+                        date,
                         acc,
                         file,
                         entry.tags.copy(),

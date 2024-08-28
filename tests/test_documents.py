@@ -2,7 +2,9 @@ import unittest
 
 from os import path
 from beancount import loader
+from beancount.core import data
 from beancount_toolbox.plugins import documents
+import datetime
 
 
 class TestDocuments(unittest.TestCase):
@@ -70,6 +72,48 @@ class TestDocuments(unittest.TestCase):
         """
         self.assertEqual(0, len(errors))
         self.assertEqual(5, len(entries))
+
+    @loader.load_doc()
+    def test_valid_document_entries(self, entries, errors, __):
+        """
+        plugin "beancount_toolbox.plugins.documents"
+
+        2011-01-01 open Expenses:Food
+        2011-01-01 open Assets:Other
+
+        2011-05-17 * "Something" #tag
+            document: "pyproject.toml"
+            Expenses:Food         2.00 USD
+            Assets:Other         -2.00 USD
+        """
+        self.assertEqual(0, len(errors))
+        dates = [x.date for x in entries if isinstance(x, data.Document)]
+        self.assertListEqual(
+            [datetime.date(2011, 5, 17),
+             datetime.date(2011, 5, 17)],
+            dates,
+        )
+
+    @loader.load_doc()
+    def test_valid_document_entries(self, entries, errors, __):
+        """
+        plugin "beancount_toolbox.plugins.documents"
+
+        2011-01-01 open Expenses:Food
+        2011-01-01 open Assets:Other
+
+        2011-05-17 * "Something" #tag
+            document: "2011-05-15.pyproject.toml"
+            Expenses:Food         2.00 USD
+            Assets:Other         -2.00 USD
+        """
+        self.assertEqual(0, len(errors))
+        dates = [x.date for x in entries if isinstance(x, data.Document)]
+        self.assertListEqual(
+            [datetime.date(2011, 5, 15),
+             datetime.date(2011, 5, 15)],
+            dates,
+        )
 
 
 class TestBasePathFromConfig(unittest.TestCase):
