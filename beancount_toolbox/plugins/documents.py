@@ -8,8 +8,14 @@ import dateutil
 from beancount.core import data, getters
 
 
+class DocumentError(typing.NamedTuple):
+    source: dict[str, typing.Any]
+    message: str
+    entry: typing.NamedTuple
+
+
 def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
-    if config is None:
+    if config is None or config == 'strict':
         main_file = options_map.get('filename', '<empty>')
         if path.isfile(main_file):
             return path.join(path.dirname(main_file), 'documents')
@@ -24,9 +30,11 @@ def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
 def documents(entries, options_map: typing.Mapping, config=None):
     basepath = _basepath_from_config(options_map, config)
     existing_files = [
-        os.path.join(root[len(basepath) + 1:], f)
+        path.join(root[len(basepath) + 1:], f)
         for root, _, files in os.walk(basepath) for f in files
     ]
+
+    strict_opt = config is not None and config == 'strict'
 
     errors = []
     new_documents = []
@@ -46,6 +54,14 @@ def documents(entries, options_map: typing.Mapping, config=None):
                 match_list = [x for x in existing_files if x.endswith(file)]
                 if len(match_list) > 0:
                     file = path.join(basepath, match_list[0])
+                elif strict_opt:
+                    errors.append(
+                        DocumentError(
+                            entry.meta,
+                            f"missing file {file}",
+                            entry,
+                        ))
+                    continue
                 else:
                     file = path.join(basepath, file)
 

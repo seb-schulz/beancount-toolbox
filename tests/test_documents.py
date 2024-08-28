@@ -24,6 +24,23 @@ class TestDocuments(unittest.TestCase):
         self.assertEqual(0, len(errors))
         self.assertEqual(3, len(entries))
 
+    @loader.load_doc(expect_errors=True)
+    def test_valid_invoice_entries_strict(self, entries, errors, __):
+        """
+        plugin "beancount_toolbox.plugins.documents" "strict"
+
+        2011-01-01 open Expenses:Food
+        2011-01-01 open Assets:Other
+
+        2011-05-17 * "Something" #tag
+            invoice: "invoice.pdf"
+            Expenses:Food         1.00 USD
+            Assets:Other         -1.00 USD
+        """
+        self.assertEqual(1, len(errors))
+        self.assertEqual(3, len(entries))
+        self.assertTrue(errors[0].message.startswith('missing file'))
+
     @loader.load_doc()
     def test_valid_invoice_entries(self, entries, errors, __):
         """
