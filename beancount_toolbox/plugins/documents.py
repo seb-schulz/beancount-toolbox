@@ -4,7 +4,7 @@ import os
 import typing
 from os import path
 
-from beancount.core import data, flags
+from beancount.core import data, getters
 
 
 def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
@@ -35,12 +35,12 @@ def documents(entries, options_map: typing.Mapping, config=None):
             if not path.isabs(file):
                 file = path.join(basepath, file)
 
-            for post in entry.postings:
+            for acc in getters.get_entry_accounts(entry):
                 new_documents.append(
                     data.Document(
                         dict(**entry.meta),
                         entry.date,
-                        post.account,
+                        acc,
                         file,
                         entry.tags.copy(),
                         entry.links.copy(),
