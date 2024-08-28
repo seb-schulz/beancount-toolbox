@@ -8,6 +8,8 @@ maintainers = [
 [project.scripts]
 bean-rofi = "beancount_toolbox.cli.rofi:main"
 bean-check = "beancount.scripts.check:main"
+bean-format = "beancount.scripts.format:main"
+bean-query = "beancount.query.shell:main"
 bean-web = "beancount_toolbox.cli.web:main"
 
 [tool.setuptools.dynamic]
