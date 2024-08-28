@@ -27,8 +27,11 @@ def documents(entries, options_map: typing.Mapping, config=None):
     new_documents = []
 
     for entry in entries:
-        if 'invoice' in entry.meta:
-            file = entry.meta['invoice']
+        for key in ['invoice', 'document']:
+            if key not in entry.meta:
+                continue
+
+            file = entry.meta[key]
             if not path.isabs(file):
                 file = path.join(basepath, file)
 
