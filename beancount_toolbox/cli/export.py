@@ -10,60 +10,50 @@ from beancount.core import data
 import pydantic
 
 
-class PluginConfig(pydantic.BaseModel):
+class BeancountPluginConfig(pydantic.BaseModel):
     module_name: str
     string_config: str = None
 
     @pydantic.computed_field
     @property
-    def module_fn(
+    def plugin_fn(
         self
     ) -> Callable[[typing.List[typing.NamedTuple], typing.Mapping],
                   typing.Tuple[typing.List[typing.NamedTuple], typing.List]]:
-        if self.module_name is None:
+
+        module = importlib.import_module(self.module_name)
+        if not hasattr(module, '__plugins__'):
             return []
 
-        try:
-            cb_fns = [getattr(sys.modules[__name__], self.module_name)]
-        except AttributeError:
-            module = importlib.import_module(self.module_name)
-            if not hasattr(module, '__plugins__'):
-                return []
-
-            module = importlib.import_module(self.module_name)
-            if not hasattr(module, '__plugins__'):
-                return []
-
-            cb_fns = [
-                getattr(module, fn) if isinstance(fn, str) else fn
-                for fn in module.__plugins__
-            ]
+        cb_fns = [
+            getattr(module, fn) if isinstance(fn, str) else fn
+            for fn in module.__plugins__
+        ]
 
         def wrapper(entires, options_map):
+            errors = []
             for cb in cb_fns:
                 if self.string_config is None:
-                    new_entires, errors = cb(
+                    new_entires, e = cb(
                         entires,
                         options_map,
                     )
                 else:
-                    new_entires, errors = cb(
+                    new_entires, e = cb(
                         entires,
                         options_map,
                         self.string_config,
                     )
-                return data.sorted(new_entires), errors
-            return
+                new_entires = data.sorted(new_entires)
+                errors.extend(e)
+            return new_entires, errors
 
         return wrapper
 
-
-def exec_plugin(entries, options_map: typing.Mapping,
-                config: PluginConfig | None):
-
-    if config is None:
-        return entries, []
-    return config.module_fn(entries, options_map)
+    def apply(
+        self, entries, options_map: typing.Mapping
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        return self.plugin_fn(entries, options_map)
 
 
 def main():
