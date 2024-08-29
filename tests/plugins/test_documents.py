@@ -157,7 +157,10 @@ class TestBasePathFromConfig(unittest.TestCase):
 
     def test_none_values(self):
         got = documents._basepath_from_config()
-        self.assertEqual(got, path.dirname(path.dirname(__file__)))
+        self.assertEqual(
+            got,
+            path.dirname(path.dirname(path.dirname(__file__))),
+        )
 
     def test_with_option_map_filename(self):
         pass
