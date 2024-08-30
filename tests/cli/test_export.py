@@ -336,5 +336,154 @@ class TestExport(cmptest.TestCase):
         )
 
 
+class Action(cmptest.TestCase):
+
+    @loader.load_doc(expect_errors=False)
+    def test_apply_keep_only_transactions(self, entires, errors, options_map):
+        """
+        2011-01-01 open Assets:Cash:Foobar
+        2011-01-02 open Assets:Cash:Baz
+        2011-01-01 open Expenses:Misc
+
+        2011-01-01 * "Something" #foo
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc        1.00 USD
+
+        2011-01-02 * "Something else"
+            Assets:Cash:Baz     -1.00 USD
+            Expenses:Misc        1.00 USD
+        """
+        new_entries, new_errors = export.Action(
+            keep_only_transactions=True)._apply_keep_only_transactions(entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something" #foo
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Misc        1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Misc        1.00 USD
+            """,
+            new_entries,
+        )
+
+        new_entries, new_errors = export.Action(
+            keep_only_transactions=False)._apply_keep_only_transactions(
+                entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 open Assets:Cash:Foobar
+            2011-01-01 open Expenses:Misc
+            2011-01-02 open Assets:Cash:Baz
+
+            2011-01-01 * "Something" #foo
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Misc        1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Misc        1.00 USD
+            """,
+            new_entries,
+        )
+
+    @loader.load_doc(expect_errors=True)
+    def test_simple_replace(self, entires, errors, options_map):
+        """
+        2011-01-01 * "Something"
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc        1.00 USD
+
+        2011-01-02 * "Something else"
+            Assets:Cash:Baz     -1.00 USD
+            Expenses:Misc        1.00 USD
+        """
+        plugin = export.Action(rename_account=('Expenses:Misc',
+                                               'Expenses:Foobar'))
+
+        new_entries, new_errors = plugin._apply_rename_account(entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something"
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Foobar      1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Foobar      1.00 USD
+            """,
+            new_entries,
+        )
+
+    @loader.load_doc(expect_errors=True)
+    def test_regex_replace(self, entires, errors, options_map):
+        """
+        2011-01-01 * "Something"
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc        1.00 USD
+
+        2011-01-02 * "Something else"
+            Assets:Cash:Baz     -1.00 USD
+            Expenses:Misc        1.00 USD
+        """
+        plugin = export.Action(rename_account=(r'^Exp.+sc$',
+                                               'Expenses:Foobar'))
+
+        new_entries, new_errors = plugin._apply_rename_account(entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something"
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Foobar      1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Foobar      1.00 USD
+            """,
+            new_entries,
+        )
+
+    @loader.load_doc(expect_errors=True)
+    def test_regex_with_template(self, entires, errors, options_map):
+        """
+        2011-01-01 * "Something"
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc:A      1.00 USD
+
+        2011-01-02 * "Something else"
+            Assets:Cash:Baz     -1.00 USD
+            Expenses:Misc:B      1.00 USD
+        """
+        plugin = export.Action(rename_account=(
+            r'^Expenses:(?P<component>.+):A$',
+            r'Expenses:{component}:C',
+        ))
+
+        new_entries, new_errors = plugin._apply_rename_account(entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something"
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Misc:C      1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Misc:B      1.00 USD
+            """,
+            new_entries,
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import os
+import re
 import sys
 import pydantic.json
 import yaml
@@ -14,7 +15,11 @@ import pydantic
 
 
 class BeancountPluginConfig(pydantic.BaseModel):
-    module_name: str
+    module_name: str = pydantic.Field(
+        description=
+        'Plugin of beancount ecosystem (e.x. beancount.plugins.auto_accounts)',
+        examples='beancount.plugins.auto_accounts',
+    )
     string_config: str = None
 
     @pydantic.computed_field
@@ -93,8 +98,56 @@ class TransactionOnlyConfig(pydantic.BaseModel):
         return data.sorted(new_entries), new_errors
 
 
+class Action(pydantic.BaseModel):
+    keep_only_transactions: bool = pydantic.Field(
+        None, description='Drop every directive except transactions')
+    rename_account: typing.Tuple[str, str] = pydantic.Field(
+        None, description='Rename accounts')
+
+    def _apply_keep_only_transactions(
+            self, entries
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+
+        return [
+            x for x in entries if not self.keep_only_transactions
+            or isinstance(x, data.Transaction)
+        ], []
+
+    def _apply_rename_account(
+            self, entries
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        old, new = self.rename_account
+        new_entries = []
+        for entry in entries:
+            if isinstance(entry, data.Transaction):
+                new_postings = []
+                for posting in entry.postings:
+                    g = re.search(
+                        old.strip(),
+                        posting.account,
+                    )
+                    if g:
+                        new_postings.append(
+                            posting._replace(account=new.format(
+                                **g.groupdict())))
+                    else:
+                        new_postings.append(posting)
+                new_entries.append(entry._replace(postings=new_postings))
+            else:
+                new_entries.append(entry)
+        return new_entries, []
+
+    def apply(
+        self, entries, _options_map: typing.Mapping
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        if self.keep_only_transactions is not None:
+            return self._apply_keep_only_transactions(entries)
+        elif self.rename_account is not None:
+            return self._apply_rename_account(entries)
+
+
 class RootConfig(pydantic.BaseModel):
-    plugins: typing.List[TransactionOnlyConfig | BeancountPluginConfig] = []
+    plugins: typing.List[Action | BeancountPluginConfig] = []
 
     def apply(
         self, entries, options_map: typing.Mapping
