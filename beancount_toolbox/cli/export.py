@@ -84,7 +84,8 @@ class TransactionOnlyConfig(pydantic.BaseModel):
             new_entries = data.sorted(ne)
             new_errors.extend(err)
 
-        new_entries.extend(entry_map[False])
+        if self.keep_directives:
+            new_entries.extend(entry_map[False])
         return data.sorted(new_entries), new_errors
 
 
