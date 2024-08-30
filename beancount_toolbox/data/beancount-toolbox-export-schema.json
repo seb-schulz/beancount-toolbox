@@ -1,13 +1,1 @@
-{
-  "properties": {
-    "module_name": { "title": "Module Name", "type": "string" },
-    "string_config": {
-      "default": null,
-      "title": "String Config",
-      "type": "string"
-    }
-  },
-  "required": ["module_name"],
-  "title": "BeancountPluginConfig",
-  "type": "object"
-}
+{"$defs": {"BeancountPluginConfig": {"properties": {"module_name": {"title": "Module Name", "type": "string"}, "string_config": {"default": null, "title": "String Config", "type": "string"}}, "required": ["module_name"], "title": "BeancountPluginConfig", "type": "object"}, "TransactionOnlyConfig": {"properties": {"plugins": {"default": [], "items": {"$ref": "#/$defs/BeancountPluginConfig"}, "title": "Plugins", "type": "array"}, "keep_directives": {"default": false, "title": "Keep Directives", "type": "boolean"}}, "title": "TransactionOnlyConfig", "type": "object"}}, "properties": {"plugins": {"default": [], "items": {"anyOf": [{"$ref": "#/$defs/TransactionOnlyConfig"}, {"$ref": "#/$defs/BeancountPluginConfig"}]}, "title": "Plugins", "type": "array"}}, "title": "RootConfig", "type": "object"}

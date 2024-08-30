@@ -94,8 +94,7 @@ class TransactionOnlyConfig(pydantic.BaseModel):
 
 
 class RootConfig(pydantic.BaseModel):
-    plugins: typing.List[TransactionOnlyConfig | BeancountPluginConfig
-                         | CallableConfig] = []
+    plugins: typing.List[TransactionOnlyConfig | BeancountPluginConfig] = []
 
     def apply(
         self, entries, options_map: typing.Mapping
