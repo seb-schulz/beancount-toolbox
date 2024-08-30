@@ -7,6 +7,7 @@ from collections.abc import Callable
 from beancount import loader
 from beancount.parser import printer
 from beancount.core import data
+from beancount.utils import misc_utils
 import pydantic
 
 
@@ -54,6 +55,37 @@ class BeancountPluginConfig(pydantic.BaseModel):
         self, entries, options_map: typing.Mapping
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
         return self.plugin_fn(entries, options_map)
+
+
+class CallableConfig(pydantic.BaseModel):
+    fun: Callable[[typing.List[typing.NamedTuple], typing.Mapping],
+                  typing.Tuple[typing.List[typing.NamedTuple], typing.List]]
+
+    def apply(
+        self, entries, options_map: typing.Mapping
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        new_entires, errors = self.fun(entries, options_map)
+        return data.sorted(new_entires), errors
+
+
+class TransactionOnlyConfig(pydantic.BaseModel):
+    plugins: typing.List[BeancountPluginConfig | CallableConfig] = []
+    keep_directives: bool = False
+
+    def apply(
+        self, entries, options_map: typing.Mapping
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        entry_map = misc_utils.groupby(
+            lambda x: isinstance(x, data.Transaction), entries)
+        new_entries, new_errors = entry_map[True], []
+
+        for p in self.plugins:
+            ne, err = p.apply(new_entries, options_map)
+            new_entries = data.sorted(ne)
+            new_errors.extend(err)
+
+        new_entries.extend(entry_map[False])
+        return data.sorted(new_entries), new_errors
 
 
 def main():

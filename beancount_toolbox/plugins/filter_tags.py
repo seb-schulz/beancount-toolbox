@@ -22,7 +22,7 @@ def filter_tags(entries, options_map: typing.Mapping, config=None):
 
     for accounts_ in getters.get_accounts(new_entries):
         new_entries.extend([
-            x for x in open_close_dict[accounts_]
+            x for x in open_close_dict.get(accounts_, [])
             if x is not None and (type(x),
                                   x.account) not in existing_open_close_set
         ])
