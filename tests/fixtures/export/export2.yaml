@@ -1,0 +1,3 @@
+plugins:
+  - module_name: "beancount_toolbox.plugins.filter_tags"
+    string_config: "foobar"

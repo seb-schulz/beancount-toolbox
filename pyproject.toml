@@ -11,6 +11,7 @@ bean-check = "beancount.scripts.check:main"
 bean-format = "beancount.scripts.format:main"
 bean-query = "beancount.query.shell:main"
 bean-web = "beancount_toolbox.cli.web:main"
+bean-export = "beancount_toolbox.cli.export:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "beancount_toolbox.__version__"}

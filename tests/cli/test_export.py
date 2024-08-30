@@ -1,9 +1,19 @@
+from os import path
 import unittest
 
 from beancount import loader
 from beancount.parser import cmptest
 from beancount_toolbox.cli import export
 from beancount.core import data
+from beancount.utils import test_utils
+
+
+def fixture_path() -> str:
+    return path.join(
+        path.dirname(path.dirname(__file__)),
+        'fixtures',
+        'export',
+    )
 
 
 class BeancountPluginConfig(cmptest.TestCase):
@@ -279,6 +289,51 @@ class TransactionOnlyConfig(cmptest.TestCase):
         )
 
         plugin.apply(entires, options_map)
+
+
+class TestExport(cmptest.TestCase):
+
+    def test_empty_config(self):
+        with test_utils.capture() as stdout:
+            test_utils.run_with_args(export.main, [
+                path.join(fixture_path(), 'export1.yaml'),
+                path.join(fixture_path(), 'example.bean'),
+            ])
+        output = stdout.getvalue()
+
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 open Assets:Cash:Foobar
+            2011-01-02 open Assets:Cash:Baz
+            2011-01-01 open Expenses:Misc
+
+            2011-01-01 * "Something" #foobar
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Misc        1.00 USD
+
+            2011-01-02 * "Something else"
+                Assets:Cash:Baz     -1.00 USD
+                Expenses:Misc        1.00 USD
+            """,
+            output,
+        )
+
+    def test_tag_filter(self):
+        with test_utils.capture() as stdout:
+            test_utils.run_with_args(export.main, [
+                path.join(fixture_path(), 'export2.yaml'),
+                path.join(fixture_path(), 'example.bean'),
+            ])
+        output = stdout.getvalue()
+
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something" #foobar
+                Assets:Cash:Foobar  -1.00 USD
+                Expenses:Misc        1.00 USD
+            """,
+            output,
+        )
 
 
 if __name__ == '__main__':

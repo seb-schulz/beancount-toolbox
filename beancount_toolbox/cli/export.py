@@ -2,6 +2,7 @@ import argparse
 import importlib
 import os
 import sys
+import yaml
 import typing
 from collections.abc import Callable
 from beancount import loader
@@ -89,6 +90,22 @@ class TransactionOnlyConfig(pydantic.BaseModel):
         return data.sorted(new_entries), new_errors
 
 
+class RootConfig(pydantic.BaseModel):
+    plugins: typing.List[TransactionOnlyConfig | BeancountPluginConfig
+                         | CallableConfig] = []
+
+    def apply(
+        self, entries, options_map: typing.Mapping
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        new_entries, new_errors = entries, []
+
+        for p in self.plugins:
+            ne, err = p.apply(new_entries, options_map)
+            new_entries = data.sorted(ne)
+            new_errors.extend(err)
+        return new_entries, new_errors
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -102,13 +119,31 @@ def main():
     parser.add_argument('beanfile', type=str, help='Path to a source file')
     args = parser.parse_args()
 
-    entries, errors, options_map = loader.load_file(args.source)
-    if len(errors) > 0:
-        printer.print_errors(errors, file=sys.stderr)
-        os.exit(1)
+    if not os.path.isfile(args.config):
+        print("no such config file", file=sys.stderr)
+        sys.exit(1)
         return
 
-    print(args)
+    with open(args.config, 'r') as stream:
+        try:
+            config = RootConfig(**yaml.safe_load(stream))
+        except TypeError:
+            print("config file is invalid", file=sys.stderr)
+            sys.exit(2)
+
+    entries, errors, options_map = loader.load_file(args.beanfile)
+    if len(errors) > 0:
+        printer.print_errors(errors, file=sys.stderr)
+        sys.exit(1)
+        return
+
+    entries, errors = config.apply(entries, options_map)
+    if len(errors) > 0:
+        printer.print_errors(errors, file=sys.stderr)
+        sys.exit(1)
+        return
+
+    printer.print_entries(entries, file=args.output)
 
 
 if __name__ == '__main__':
