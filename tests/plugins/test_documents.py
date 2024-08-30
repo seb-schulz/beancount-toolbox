@@ -29,8 +29,7 @@ class TestDocuments(unittest.TestCase):
             Assets:Other         -1.00 USD
         """
         self.assertEqual(0, len(errors))
-        from beancount_toolbox.plugins.documents import documents
-        entries, errors = documents(entries, options_map, None)
+        entries, errors = documents.documents(entries, options_map, None)
 
         self.assertEqual(0, len(errors))
         self.assertEqual(3, len(entries))
@@ -53,10 +52,8 @@ class TestDocuments(unittest.TestCase):
         self.assertTrue(errors[0].message.startswith('missing file'))
 
     @loader.load_doc()
-    def test_valid_invoice_entries(self, entries, errors, __):
+    def test_valid_invoice_entries(self, entries, errors, options_map):
         """
-        plugin "beancount_toolbox.plugins.documents"
-
         2011-01-01 open Expenses:Food
         2011-01-01 open Assets:Other
 
@@ -65,6 +62,9 @@ class TestDocuments(unittest.TestCase):
             Expenses:Food         1.00 USD
             Assets:Other         -1.00 USD
         """
+        self.assertEqual(0, len(errors))
+        entries, errors = documents.documents(entries, options_map, None)
+
         self.assertEqual(0, len(errors))
         self.assertEqual(5, len(entries))
 
@@ -146,8 +146,6 @@ class TestDocuments(unittest.TestCase):
     @loader.load_doc()
     def test_check_file_path(self, entries, errors, options_map):
         """
-        plugin "beancount_toolbox.plugins.documents"
-
         2011-01-01 open Expenses:Food
         2011-01-01 open Assets:Other
 
@@ -156,10 +154,12 @@ class TestDocuments(unittest.TestCase):
             Expenses:Food         2.00 USD
             Assets:Other         -2.00 USD
         """
-        raise
         self.assertEqual(0, len(errors))
-        from beancount_toolbox.plugins.documents import documents
-        entries, errors = documents(entries, options_map, fixture_path())
+        entries, errors = documents.documents(
+            entries,
+            options_map,
+            fixture_path(),
+        )
 
         self.assertEqual(0, len(errors))
         self.assertTrue(
