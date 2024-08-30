@@ -68,7 +68,7 @@ def read_config_file(file: pathlib.Path):
             with open(x) as fp:
                 c = yaml.safe_load(fp)
             return Config(**c)
-        except FileNotFoundError as err:
+        except FileNotFoundError:
             pass
         except pydantic.ValidationError as err:
             print(

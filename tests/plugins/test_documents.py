@@ -85,24 +85,7 @@ class TestDocuments(unittest.TestCase):
         self.assertEqual(5, len(entries))
 
     @loader.load_doc()
-    def test_valid_document_entries(self, entries, errors, __):
-        """
-        plugin "beancount_toolbox.plugins.documents"
-
-        2011-01-01 open Expenses:Food
-        2011-01-01 open Assets:Other
-
-        2011-05-17 * "Something" #tag
-            document: "pyproject.toml"
-            Expenses:Food         2.00 USD
-            Assets:Other         -1.00 USD
-            Assets:Other         -1.00 USD
-        """
-        self.assertEqual(0, len(errors))
-        self.assertEqual(5, len(entries))
-
-    @loader.load_doc()
-    def test_valid_document_entries(self, entries, errors, __):
+    def test_document_date_entries1(self, entries, errors, __):
         """
         plugin "beancount_toolbox.plugins.documents"
 
@@ -123,7 +106,7 @@ class TestDocuments(unittest.TestCase):
         )
 
     @loader.load_doc()
-    def test_valid_document_entries(self, entries, errors, __):
+    def test_document_date_entries2(self, entries, errors, __):
         """
         plugin "beancount_toolbox.plugins.documents"
 

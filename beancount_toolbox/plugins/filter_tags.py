@@ -1,7 +1,7 @@
 __plugins__ = ['filter_tags']
 import typing
 from beancount.ops import basicops
-from beancount.core import getters, data
+from beancount.core import data
 
 
 def filter_tags(entries, _options_map: typing.Mapping, config=None):
