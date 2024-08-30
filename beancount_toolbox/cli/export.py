@@ -2,6 +2,7 @@ import argparse
 import importlib
 import os
 import sys
+import pydantic.json
 import yaml
 import typing
 from collections.abc import Callable
@@ -70,7 +71,9 @@ class CallableConfig(pydantic.BaseModel):
 
 
 class TransactionOnlyConfig(pydantic.BaseModel):
-    plugins: typing.List[BeancountPluginConfig | CallableConfig] = []
+    plugins: typing.List[BeancountPluginConfig
+                         | pydantic.json_schema.
+                         SkipJsonSchema[CallableConfig]] = []
     keep_directives: bool = False
 
     def apply(
