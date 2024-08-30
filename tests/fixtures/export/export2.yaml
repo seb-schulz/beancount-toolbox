@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../../beancount_toolbox/data/beancount-toolbox-export-schema.json
 plugins:
   - module_name: "beancount_toolbox.plugins.filter_tags"
     string_config: "foobar"
