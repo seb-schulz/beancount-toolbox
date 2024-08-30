@@ -15,19 +15,19 @@ class DocumentError(typing.NamedTuple):
 
 
 def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
-    if config is None or config == 'strict':
-        main_file = options_map.get('filename', '<empty>')
-        if path.isfile(main_file):
-            return path.join(path.dirname(main_file), 'documents')
-        else:
-            return os.getcwd()
-    else:
-        # if path.exists(config) and not path.isabs(config):
-        # TODO: Check case with relative path
-        pass
+    docpath = 'documents' if config is None or config == 'strict' else config
+
+    if path.isabs(docpath):
+        return docpath
+
+    main_file = options_map.get('filename', '<empty>')
+    if path.isfile(main_file):
+        return path.join(path.dirname(main_file), docpath)
+
+    return path.join(os.getcwd(), docpath)
 
 
-def documents(entries, options_map: typing.Mapping, config=None):
+def documents(entries, options_map: typing.Mapping, config: str = None):
     basepath = _basepath_from_config(options_map, config)
     existing_files = [
         path.join(root[len(basepath) + 1:], f)
