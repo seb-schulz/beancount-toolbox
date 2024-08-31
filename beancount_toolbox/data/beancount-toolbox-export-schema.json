@@ -11,6 +11,11 @@
           "required": [
             "rename_account"
           ]
+        },
+        {
+          "required": [
+            "rename_commodity"
+          ]
         }
       ],
       "properties": {
@@ -26,6 +31,14 @@
             }
           ],
           "description": "Rename accounts"
+        },
+        "rename_commodity": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/RenameCommodity"
+            }
+          ],
+          "description": "Rename commodities"
         }
       },
       "title": "Action",
@@ -53,20 +66,38 @@
     },
     "RenameAccount": {
       "properties": {
-        "src": {
-          "title": "Src",
+        "old": {
+          "title": "Old",
           "type": "string"
         },
-        "dest": {
-          "title": "Dest",
+        "new": {
+          "title": "New",
           "type": "string"
         }
       },
       "required": [
-        "src",
-        "dest"
+        "old",
+        "new"
       ],
       "title": "RenameAccount",
+      "type": "object"
+    },
+    "RenameCommodity": {
+      "properties": {
+        "old": {
+          "title": "Old",
+          "type": "string"
+        },
+        "new": {
+          "title": "New",
+          "type": "string"
+        }
+      },
+      "required": [
+        "old",
+        "new"
+      ],
+      "title": "RenameCommodity",
       "type": "object"
     }
   },

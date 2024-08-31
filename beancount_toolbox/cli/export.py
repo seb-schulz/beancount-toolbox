@@ -131,6 +131,55 @@ class RenameAccount(pydantic.BaseModel):
         return new_entries, []
 
 
+class RenameCommodity(pydantic.BaseModel):
+    old: str
+    new: str
+
+    def _apply(
+            self, entries
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        old, new = self.old, self.new
+
+        def search_and_replace_amount(
+                units: data.Amount | None) -> data.Amount:
+            if units is None:
+                return
+            g = re.search(old.strip(), units.currency)
+            if g:
+                return data.Amount(
+                    number=units.number,
+                    currency=new.format(**g.groupdict()),
+                )
+            return units
+
+        def search_and_replace_cost(
+            cost: typing.Union[data.Cost, data.CostSpec]
+        ) -> typing.Union[data.Cost, data.CostSpec]:
+            if cost is None:
+                return
+            g = re.search(old.strip(), cost.currency)
+            if g:
+                return cost._replace(currency=new.format(**g.groupdict()))
+            return cost
+
+        new_entries = []
+        for entry in entries:
+            if isinstance(entry, data.Transaction):
+                new_postings = []
+                for posting in entry.postings:
+                    posting: data.Posting = posting
+                    new_postings.append(
+                        posting._replace(
+                            units=search_and_replace_amount(posting.units),
+                            cost=search_and_replace_cost(posting.cost),
+                            price=search_and_replace_amount(posting.price),
+                        ))
+                new_entries.append(entry._replace(postings=new_postings))
+            else:
+                new_entries.append(entry)
+        return new_entries, []
+
+
 class Action(pydantic.BaseModel):
     keep_only_transactions: bool = pydantic.Field(
         None,
@@ -139,12 +188,15 @@ class Action(pydantic.BaseModel):
     rename_account: RenameAccount = pydantic.Field(
         None, description='Rename accounts', json_schema_extra=_pop_default)
 
+    rename_commodity: RenameCommodity = pydantic.Field(
+        None, description='Rename commodities', json_schema_extra=_pop_default)
+
     model_config = pydantic.ConfigDict(
         json_schema_extra={
-            # 'required': [],
             'oneOf': [
                 dict(required=['keep_only_transactions']),
                 dict(required=['rename_account']),
+                dict(required=['rename_commodity']),
             ]
         })
 
