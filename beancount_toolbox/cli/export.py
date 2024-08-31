@@ -216,6 +216,8 @@ class Action(pydantic.BaseModel):
             return self._apply_keep_only_transactions(entries)
         elif self.rename_account is not None:
             return self.rename_account._apply(entries)
+        elif self.rename_commodity is not None:
+            return self.rename_commodity._apply(entries)
 
 
 class RootConfig(pydantic.BaseModel):
