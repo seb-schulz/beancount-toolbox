@@ -392,6 +392,9 @@ class Action(cmptest.TestCase):
             new_entries,
         )
 
+
+class RenameAccount(cmptest.TestCase):
+
     @loader.load_doc(expect_errors=True)
     def test_simple_replace(self, entires, errors, options_map):
         """
@@ -403,10 +406,10 @@ class Action(cmptest.TestCase):
             Assets:Cash:Baz     -1.00 USD
             Expenses:Misc        1.00 USD
         """
-        plugin = export.Action(rename_account=('Expenses:Misc',
-                                               'Expenses:Foobar'))
-
-        new_entries, new_errors = plugin._apply_rename_account(entires)
+        new_entries, new_errors = export.RenameAccount(
+            old='Expenses:Misc',
+            new='Expenses:Foobar',
+        )._apply(entires)
 
         self.assertEqual(0, len(new_errors))
         self.assertEqualEntries(
@@ -433,10 +436,10 @@ class Action(cmptest.TestCase):
             Assets:Cash:Baz     -1.00 USD
             Expenses:Misc        1.00 USD
         """
-        plugin = export.Action(rename_account=(r'^Exp.+sc$',
-                                               'Expenses:Foobar'))
-
-        new_entries, new_errors = plugin._apply_rename_account(entires)
+        new_entries, new_errors = export.RenameAccount(
+            old=r'^Exp.+sc$',
+            new='Expenses:Foobar',
+        )._apply(entires)
 
         self.assertEqual(0, len(new_errors))
         self.assertEqualEntries(
@@ -463,12 +466,10 @@ class Action(cmptest.TestCase):
             Assets:Cash:Baz     -1.00 USD
             Expenses:Misc:B      1.00 USD
         """
-        plugin = export.Action(rename_account=(
-            r'^Expenses:(?P<component>.+):A$',
-            r'Expenses:{component}:C',
-        ))
-
-        new_entries, new_errors = plugin._apply_rename_account(entires)
+        new_entries, new_errors = export.RenameAccount(
+            old=r'^Expenses:(?P<component>.+):A$',
+            new='Expenses:{component}:C',
+        )._apply(entires)
 
         self.assertEqual(0, len(new_errors))
         self.assertEqualEntries(

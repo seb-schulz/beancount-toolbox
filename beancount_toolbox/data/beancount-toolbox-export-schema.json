@@ -20,19 +20,12 @@
           "type": "boolean"
         },
         "rename_account": {
-          "description": "Rename accounts",
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "allOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "string"
+              "$ref": "#/$defs/RenameAccount"
             }
           ],
-          "title": "Rename Account",
-          "type": "array"
+          "description": "Rename accounts"
         }
       },
       "title": "Action",
@@ -56,6 +49,24 @@
         "module_name"
       ],
       "title": "BeancountPluginConfig",
+      "type": "object"
+    },
+    "RenameAccount": {
+      "properties": {
+        "src": {
+          "title": "Src",
+          "type": "string"
+        },
+        "dest": {
+          "title": "Dest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "src",
+        "dest"
+      ],
+      "title": "RenameAccount",
       "type": "object"
     }
   },

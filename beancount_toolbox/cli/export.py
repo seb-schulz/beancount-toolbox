@@ -102,36 +102,14 @@ def _pop_default(s):
     s.pop('default')
 
 
-class Action(pydantic.BaseModel):
-    keep_only_transactions: bool = pydantic.Field(
-        None,
-        description='Drop every directive except transactions',
-        json_schema_extra=_pop_default)
-    rename_account: typing.Tuple[str, str] = pydantic.Field(
-        None, description='Rename accounts', json_schema_extra=_pop_default)
+class RenameAccount(pydantic.BaseModel):
+    old: str
+    new: str
 
-    model_config = pydantic.ConfigDict(
-        json_schema_extra={
-            # 'required': [],
-            'oneOf': [
-                dict(required=['keep_only_transactions']),
-                dict(required=['rename_account']),
-            ]
-        })
-
-    def _apply_keep_only_transactions(
+    def _apply(
             self, entries
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
-
-        return [
-            x for x in entries if not self.keep_only_transactions
-            or isinstance(x, data.Transaction)
-        ], []
-
-    def _apply_rename_account(
-            self, entries
-    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
-        old, new = self.rename_account
+        old, new = self.old, self.new
         new_entries = []
         for entry in entries:
             if isinstance(entry, data.Transaction):
@@ -152,13 +130,40 @@ class Action(pydantic.BaseModel):
                 new_entries.append(entry)
         return new_entries, []
 
+
+class Action(pydantic.BaseModel):
+    keep_only_transactions: bool = pydantic.Field(
+        None,
+        description='Drop every directive except transactions',
+        json_schema_extra=_pop_default)
+    rename_account: RenameAccount = pydantic.Field(
+        None, description='Rename accounts', json_schema_extra=_pop_default)
+
+    model_config = pydantic.ConfigDict(
+        json_schema_extra={
+            # 'required': [],
+            'oneOf': [
+                dict(required=['keep_only_transactions']),
+                dict(required=['rename_account']),
+            ]
+        })
+
+    def _apply_keep_only_transactions(
+            self, entries
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+
+        return [
+            x for x in entries if not self.keep_only_transactions
+            or isinstance(x, data.Transaction)
+        ], []
+
     def apply(
         self, entries, _options_map: typing.Mapping
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
         if self.keep_only_transactions is not None:
             return self._apply_keep_only_transactions(entries)
         elif self.rename_account is not None:
-            return self._apply_rename_account(entries)
+            return self.rename_account._apply(entries)
 
 
 class RootConfig(pydantic.BaseModel):
