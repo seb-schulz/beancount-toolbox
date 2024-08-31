@@ -203,11 +203,11 @@ class Action(pydantic.BaseModel):
     def _apply_keep_only_transactions(
             self, entries
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
-
-        return [
-            x for x in entries if not self.keep_only_transactions
-            or isinstance(x, data.Transaction)
-        ], []
+        if self.keep_only_transactions is None:
+            return entries, []
+        if not self.keep_only_transactions:
+            return entries, []
+        return [x for x in entries if isinstance(x, data.Transaction)], []
 
     def apply(
         self, entries, _options_map: typing.Mapping
