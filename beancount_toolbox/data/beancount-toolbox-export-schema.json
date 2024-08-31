@@ -1,15 +1,25 @@
 {
   "$defs": {
     "Action": {
+      "oneOf": [
+        {
+          "required": [
+            "keep_only_transactions"
+          ]
+        },
+        {
+          "required": [
+            "rename_account"
+          ]
+        }
+      ],
       "properties": {
         "keep_only_transactions": {
-          "default": null,
           "description": "Drop every directive except transactions",
           "title": "Keep Only Transactions",
           "type": "boolean"
         },
         "rename_account": {
-          "default": null,
           "description": "Rename accounts",
           "maxItems": 2,
           "minItems": 2,

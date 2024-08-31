@@ -98,11 +98,26 @@ class TransactionOnlyConfig(pydantic.BaseModel):
         return data.sorted(new_entries), new_errors
 
 
+def _pop_default(s):
+    s.pop('default')
+
+
 class Action(pydantic.BaseModel):
     keep_only_transactions: bool = pydantic.Field(
-        None, description='Drop every directive except transactions')
+        None,
+        description='Drop every directive except transactions',
+        json_schema_extra=_pop_default)
     rename_account: typing.Tuple[str, str] = pydantic.Field(
-        None, description='Rename accounts')
+        None, description='Rename accounts', json_schema_extra=_pop_default)
+
+    model_config = pydantic.ConfigDict(
+        json_schema_extra={
+            # 'required': [],
+            'oneOf': [
+                dict(required=['keep_only_transactions']),
+                dict(required=['rename_account']),
+            ]
+        })
 
     def _apply_keep_only_transactions(
             self, entries
