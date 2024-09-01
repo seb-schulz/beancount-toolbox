@@ -409,6 +409,12 @@ class Action(cmptest.TestCase):
             Assets:Cash:Foobar  -2 ITEM {1.50 USD}
             Assets:Cash:Foobar  -1 ITEM {1.50 USD}
             Expenses:Misc        1.00 USD
+
+        2011-01-03 * "Something III" #foo
+            Assets:Cash:Foobar  -2 ITEM {1.50 USD}
+            Assets:Cash:Foobar   2 ITEM {1.50 USD}
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc        1.00 USD
         """
         new_entries, new_errors = export.Action(
             keep_only_transactions=True)._apply_tidy_transactions(entires)
@@ -426,6 +432,10 @@ class Action(cmptest.TestCase):
 
             2011-01-03 * "Something III"
                 Assets:Cash:Foobar  -3 ITEM {1.50 USD}
+                Expenses:Misc        1.00 USD
+
+            2011-01-03 * "Something III"
+                Assets:Cash:Foobar  -1.00 USD
                 Expenses:Misc        1.00 USD
             """,
             new_entries,

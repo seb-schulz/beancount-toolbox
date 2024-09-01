@@ -9,7 +9,7 @@ import typing
 from collections.abc import Callable
 from beancount import loader
 from beancount.parser import printer
-from beancount.core import data, inventory, convert, position
+from beancount.core import data, amount
 from beancount.utils import misc_utils
 from beancount.ops import compress
 import pydantic
@@ -221,7 +221,13 @@ class Action(pydantic.BaseModel):
         new_entries = []
         for entry in entries:
             if isinstance(entry, data.Transaction):
-                new_entries.append(compress.merge([entry], entry))
+                new_entry = compress.merge([entry], entry)
+
+                new_entries.append(
+                    new_entry._replace(postings=[
+                        p for p in new_entry.postings
+                        if p.units.number != amount.ZERO
+                    ]))
             else:
                 new_entries.append(entry)
         return new_entries, []
