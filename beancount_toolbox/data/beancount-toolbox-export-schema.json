@@ -24,6 +24,11 @@
           "title": "Keep Only Transactions",
           "type": "boolean"
         },
+        "tidy_transactions": {
+          "description": "Reduce postings of transaction to minimal set",
+          "title": "Tidy Transactions",
+          "type": "boolean"
+        },
         "rename_account": {
           "allOf": [
             {

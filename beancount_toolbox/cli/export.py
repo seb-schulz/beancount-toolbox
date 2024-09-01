@@ -9,8 +9,9 @@ import typing
 from collections.abc import Callable
 from beancount import loader
 from beancount.parser import printer
-from beancount.core import data
+from beancount.core import data, inventory, convert, position
 from beancount.utils import misc_utils
+from beancount.ops import compress
 import pydantic
 
 
@@ -185,6 +186,10 @@ class Action(pydantic.BaseModel):
         None,
         description='Drop every directive except transactions',
         json_schema_extra=_pop_default)
+    tidy_transactions: bool = pydantic.Field(
+        None,
+        description='Reduce postings of transaction to minimal set',
+        json_schema_extra=_pop_default)
     rename_account: RenameAccount = pydantic.Field(
         None, description='Rename accounts', json_schema_extra=_pop_default)
 
@@ -209,11 +214,25 @@ class Action(pydantic.BaseModel):
             return entries, []
         return [x for x in entries if isinstance(x, data.Transaction)], []
 
+    def _apply_tidy_transactions(
+            self, entries
+    ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
+        from collections import defaultdict
+        new_entries = []
+        for entry in entries:
+            if isinstance(entry, data.Transaction):
+                new_entries.append(compress.merge([entry], entry))
+            else:
+                new_entries.append(entry)
+        return new_entries, []
+
     def apply(
         self, entries, _options_map: typing.Mapping
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
         if self.keep_only_transactions is not None:
             return self._apply_keep_only_transactions(entries)
+        elif self.tidy_transactions:
+            return self._apply_tidy_transactions(entries)
         elif self.rename_account is not None:
             return self.rename_account._apply(entries)
         elif self.rename_commodity is not None:

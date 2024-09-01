@@ -392,6 +392,45 @@ class Action(cmptest.TestCase):
             new_entries,
         )
 
+    @loader.load_doc(expect_errors=True)
+    def test_apply_tidy_transactions(self, entires, errors, options_map):
+        """
+        2011-01-01 * "Something" #foo
+            Assets:Cash:Foobar  -1.00 USD
+            Assets:Cash:Foobar  -1.00 USD
+            Expenses:Misc        1.00 USD
+
+        2011-01-02 * "Something II" #foo
+            Assets:Cash:Foobar  -2.00 USD @ 1 EUR
+            Assets:Cash:Foobar  -1.00 USD @ 1 EUR
+            Expenses:Misc        1.00 USD
+
+        2011-01-03 * "Something III" #foo
+            Assets:Cash:Foobar  -2 ITEM {1.50 USD}
+            Assets:Cash:Foobar  -1 ITEM {1.50 USD}
+            Expenses:Misc        1.00 USD
+        """
+        new_entries, new_errors = export.Action(
+            keep_only_transactions=True)._apply_tidy_transactions(entires)
+
+        self.assertEqual(0, len(new_errors))
+        self.assertEqualEntries(
+            r"""
+            2011-01-01 * "Something"
+                Assets:Cash:Foobar  -2.00 USD
+                Expenses:Misc        1.00 USD
+
+            2011-01-02 * "Something II"
+                Assets:Cash:Foobar  -3.00 USD @ 1 EUR
+                Expenses:Misc        1.00 USD
+
+            2011-01-03 * "Something III"
+                Assets:Cash:Foobar  -3 ITEM {1.50 USD}
+                Expenses:Misc        1.00 USD
+            """,
+            new_entries,
+        )
+
 
 class RenameAccount(cmptest.TestCase):
 
