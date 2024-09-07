@@ -14,7 +14,7 @@ beancount-reds-plugins==0.3.0
     # via -r requirements.in
 beautifulsoup4==4.12.3
     # via beancount
-bottle==0.12.25
+bottle==0.13.1
     # via beancount
 cachetools==5.5.0
     # via google-auth
@@ -26,7 +26,7 @@ charset-normalizer==3.3.2
     # via requests
 google-api-core==2.19.2
     # via google-api-python-client
-google-api-python-client==2.143.0
+google-api-python-client==2.144.0
     # via beancount
 google-auth==2.34.0
     # via
@@ -68,9 +68,9 @@ pyasn1==0.6.0
     #   rsa
 pyasn1-modules==0.4.0
     # via google-auth
-pydantic==2.8.2
+pydantic==2.9.0
     # via -r requirements.in
-pydantic-core==2.20.1
+pydantic-core==2.23.2
     # via pydantic
 pyparsing==3.1.4
     # via httplib2
