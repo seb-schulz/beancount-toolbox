@@ -3,3 +3,4 @@ beancount-reds-plugins
 pyyaml
 pydantic
 fava
+bottle<0.13

@@ -23,8 +23,10 @@ beautifulsoup4==4.12.3
     # via beancount
 blinker==1.8.2
     # via flask
-bottle==0.13.1
-    # via beancount
+bottle==0.12.25
+    # via
+    #   -r requirements.in
+    #   beancount
 cachetools==5.5.0
     # via google-auth
 certifi==2024.8.30

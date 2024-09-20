@@ -8,6 +8,10 @@
     {
       "matchPackageNames": ["pydantic-core"],
       "allowedVersions": "<=2.23.3"
+    },
+    {
+      "matchPackageNames": ["bottle"],
+      "allowedVersions": "<0.13"
     }
   ]
 }
