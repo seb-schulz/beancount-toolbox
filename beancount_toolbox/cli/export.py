@@ -217,7 +217,6 @@ class Action(pydantic.BaseModel):
     def _apply_tidy_transactions(
             self, entries
     ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
-        from collections import defaultdict
         new_entries = []
         for entry in entries:
             if isinstance(entry, data.Transaction):
