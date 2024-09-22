@@ -466,6 +466,7 @@ class AddEntryNumberPickerView(BaseView):
             ))
 
 
+@misc_utils.deprecated('Is going to be removed in version 2.0.0')
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(

@@ -259,6 +259,7 @@ class RootConfig(pydantic.BaseModel):
         return new_entries, new_errors
 
 
+@misc_utils.deprecated("export cli is going to be removed in version 2.0.0")
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
