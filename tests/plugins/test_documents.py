@@ -4,16 +4,10 @@ import unittest
 from os import path
 from beancount import loader
 from beancount.core import data
+from beancount_toolbox import utils
 from beancount_toolbox.plugins import documents
 import datetime
-
-
-def fixture_path() -> str:
-    return path.join(
-        path.dirname(path.dirname(__file__)),
-        'fixtures',
-        'documents',
-    )
+from tests import _helper
 
 
 class TestDocuments(unittest.TestCase):
@@ -141,7 +135,7 @@ class TestDocuments(unittest.TestCase):
         entries, errors = documents.documents(
             entries,
             options_map,
-            fixture_path(),
+            _helper.fixture_path('documents'),
         )
 
         self.assertEqual(0, len(errors))
@@ -162,9 +156,12 @@ class TestBasePathFromConfig(unittest.TestCase):
         )
 
     def test_with_option_map_filename(self):
-        got = documents._basepath_from_config(
-            {'filename': path.join(fixture_path(), 'empty.bean')})
-        self.assertEqual(got, path.join(fixture_path(), 'documents'))
+        got = documents._basepath_from_config({
+            'filename':
+            path.join(_helper.fixture_path('documents'), 'empty.bean')
+        })
+        self.assertEqual(
+            got, path.join(_helper.fixture_path('documents'), 'documents'))
 
     def test_relative_config_path(self):
         self.assertEqual(
@@ -174,26 +171,31 @@ class TestBasePathFromConfig(unittest.TestCase):
         self.assertEqual(
             documents._basepath_from_config(
                 {
-                    'filename': path.join(fixture_path(), 'empty.bean'),
+                    'filename':
+                    path.join(_helper.fixture_path('documents'), 'empty.bean'),
                 },
                 'foobar',
             ),
-            path.join(fixture_path(), 'foobar'),
+            path.join(_helper.fixture_path('documents'), 'foobar'),
         )
 
     def test_abs_config_path(self):
         self.assertEqual(
-            documents._basepath_from_config({}, fixture_path()),
-            fixture_path(),
+            documents._basepath_from_config(
+                {},
+                _helper.fixture_path('documents'),
+            ),
+            _helper.fixture_path('documents'),
         )
         self.assertEqual(
             documents._basepath_from_config(
                 {
-                    'filename': path.join(fixture_path(), 'empty.bean'),
+                    'filename':
+                    path.join(_helper.fixture_path('documents'), 'empty.bean'),
                 },
-                fixture_path(),
+                _helper.fixture_path('documents'),
             ),
-            fixture_path(),
+            _helper.fixture_path('documents'),
         )
 
 

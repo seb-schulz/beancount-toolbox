@@ -4,6 +4,7 @@ import os
 import typing
 from os import path
 import dateutil
+from beancount_toolbox import utils
 
 from beancount.core import data, getters
 
@@ -14,17 +15,11 @@ class DocumentError(typing.NamedTuple):
     entry: typing.NamedTuple
 
 
-def _basepath_from_config(options_map: typing.Mapping = {}, config=None):
-    docpath = 'documents' if config is None or config == 'strict' else config
-
-    if path.isabs(docpath):
-        return docpath
-
-    main_file = options_map.get('filename', '<empty>')
-    if path.isfile(main_file):
-        return path.join(path.dirname(main_file), docpath)
-
-    return path.join(os.getcwd(), docpath)
+def _basepath_from_config(options_map: typing.Mapping = {},
+                          config=None) -> os.PathLike:
+    if config is not None and config == 'strict':
+        return 'documents'
+    return utils.basepath_from_config('documents', options_map, config)
 
 
 def documents(entries, options_map: typing.Mapping, config: str = None):
