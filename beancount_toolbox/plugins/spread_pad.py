@@ -5,6 +5,7 @@ from beancount.utils import date_utils
 from datetime import date
 from beancount.utils import misc_utils
 from collections import namedtuple
+from fava.beans import abc
 
 SpreadPadError = namedtuple('SpreadPadError', 'source message entry')
 
@@ -12,7 +13,7 @@ SpreadPadError = namedtuple('SpreadPadError', 'source message entry')
 class CustomPad:
 
     def __init__(self, entry):
-        self._entry: data.Custom = entry
+        self._entry: abc.Custom = entry
 
     def __str__(self) -> str:
         from beancount.parser import printer
