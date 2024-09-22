@@ -17,9 +17,11 @@ class DocumentError(typing.NamedTuple):
 
 def _basepath_from_config(options_map: typing.Mapping = {},
                           config=None) -> os.PathLike:
-    if config is not None and config == 'strict':
-        return 'documents'
-    return utils.basepath_from_config('documents', options_map, config)
+    return utils.basepath_from_config(
+        'documents',
+        options_map,
+        None if config is None or config == 'strict' else config,
+    )
 
 
 def documents(entries, options_map: typing.Mapping, config: str = None):
