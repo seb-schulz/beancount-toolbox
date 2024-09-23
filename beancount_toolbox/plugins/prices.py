@@ -6,6 +6,7 @@ import os
 import typing
 from os import path
 
+from dateutil import rrule
 import pydantic
 from pydantic import functional_validators
 
@@ -87,6 +88,56 @@ def _parse_csv_file(
             yield p, None
 
 
+def _date_range(start: abc.Directive,
+                end: abc.Directive) -> typing.List[datetime.date]:
+    return sorted({
+        x.date()
+        for x in rrule.rrule(
+            rrule.WEEKLY,
+            dtstart=start.date,
+            until=end.date,
+            byweekday=rrule.SU,
+        )
+    } | {
+        x.date()
+        for x in rrule.rrule(
+            rrule.MONTHLY,
+            dtstart=start.date,
+            until=end.date,
+            bymonthday=-1,
+        )
+    })
+
+
+def _groupby_date(
+    entries: typing.List[abc.Directive], seq: typing.List[datetime.date]
+) -> typing.Dict[datetime.date, typing.List[abc.Directive]]:
+    r = {d: [] for d in seq}
+    for entry in data.sorted(entries):
+        for k in seq:
+            if entry.date <= k:
+                r[k].append(entry)
+                break
+
+    return r
+
+
+def _merge_prices(entries: typing.List[abc.Price]) -> abc.Price:
+    return data.Price(
+        data.new_metadata(
+            entries[0].meta.get('filename', ''),
+            entries[0].meta.get('lineno', 0), {
+                'open': entries[0].meta['open'],
+                'high': max([e.meta['high'] for e in entries]),
+                'low': min([e.meta['low'] for e in entries]),
+                'volume': sum([data.D(e.meta['volume']) for e in entries]),
+            }),
+        entries[-1].date,
+        entries[0].currency,
+        entries[-1].amount,
+    )
+
+
 def prices(
     entries: typing.List,
     options_map: typing.Mapping,
@@ -94,11 +145,19 @@ def prices(
 ) -> typing.Tuple[typing.List[typing.NamedTuple], typing.List]:
     basedir = utils.basepath_from_config('prices', options_map, config)
     errors = []
-    for currency in getters.get_commodity_directives(entries).keys():
+    for currency, ce in getters.get_commodity_directives(entries).items():
         for file in _glob(currency, basdir=basedir):
+            new_entries = []
             for p, e in _parse_csv_file(file, currency, options_map):
-                if p is not None:
-                    entries.append(p)
+                if p is not None and p.date >= ce.date:
+                    new_entries.append(p)
                 if e is not None:
                     errors.append(e)
+
+            entries.extend([
+                _merge_prices(grouped) for grouped in _groupby_date(
+                    new_entries,
+                    _date_range(ce, new_entries[-1]),
+                ).values()
+            ])
     return entries, errors
