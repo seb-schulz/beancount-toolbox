@@ -122,20 +122,21 @@ def _groupby_date(
     return r
 
 
-def _merge_prices(entries: typing.List[abc.Price]) -> abc.Price:
-    return data.Price(
-        data.new_metadata(
-            entries[0].meta.get('filename', ''),
-            entries[0].meta.get('lineno', 0), {
-                'open': entries[0].meta['open'],
-                'high': max([e.meta['high'] for e in entries]),
-                'low': min([e.meta['low'] for e in entries]),
-                'volume': sum([data.D(e.meta['volume']) for e in entries]),
-            }),
-        entries[-1].date,
-        entries[0].currency,
-        entries[-1].amount,
-    )
+def _merge_prices(entries: typing.List[abc.Price]) -> abc.Price | None:
+    if len(entries) > 0:
+        return data.Price(
+            data.new_metadata(
+                entries[0].meta.get('filename', ''),
+                entries[0].meta.get('lineno', 0), {
+                    'open': entries[0].meta['open'],
+                    'high': max([e.meta['high'] for e in entries]),
+                    'low': min([e.meta['low'] for e in entries]),
+                    'volume': sum([data.D(e.meta['volume']) for e in entries]),
+                }),
+            entries[-1].date,
+            entries[0].currency,
+            entries[-1].amount,
+        )
 
 
 def prices(
@@ -154,10 +155,11 @@ def prices(
                 if e is not None:
                     errors.append(e)
 
-            entries.extend([
+            new_entries = [
                 _merge_prices(grouped) for grouped in _groupby_date(
                     new_entries,
                     _date_range(ce, new_entries[-1]),
                 ).values()
-            ])
+            ]
+            entries.extend([x for x in new_entries if x is not None])
     return entries, errors

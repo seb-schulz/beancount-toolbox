@@ -254,3 +254,24 @@ class TestDateRangeAndGrouping(cmptest.TestCase):
         self.assertEqual(got.meta['volume'], data.D('5'))
         self.assertEqual(got.currency, 'BTC')
         self.assertEqual(got.amount, data.Amount.from_string('1.50 EUR'))
+
+    def test_merged_empty_price_list(self):
+        prices._merge_prices([])
+
+    @loader.load_doc(expect_errors=False)
+    def test_merged_single_price_point(self, entries, _errors, _options_map):
+        '''
+        2024-09-13 price BTC    2.00 EUR
+          open: 1 EUR
+          high: 3 EUR
+          low: 0.10 EUR
+          volume: 2
+        '''
+        got = prices._merge_prices(entries)
+        self.assertEqual(got.date, datetime.date(2024, 9, 13))
+        self.assertEqual(got.meta['open'], data.Amount.from_string('1 EUR'))
+        self.assertEqual(got.meta['high'], data.Amount.from_string('3 EUR'))
+        self.assertEqual(got.meta['low'], data.Amount.from_string('0.10 EUR'))
+        self.assertEqual(got.meta['volume'], data.D('2'))
+        self.assertEqual(got.currency, 'BTC')
+        self.assertEqual(got.amount, data.Amount.from_string('2 EUR'))
