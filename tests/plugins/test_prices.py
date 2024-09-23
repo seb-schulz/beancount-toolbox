@@ -20,7 +20,7 @@ class TestDocuments(cmptest.TestCase):
         self.assertEqual(0, len(errors))
 
     @loader.load_doc(expect_errors=False)
-    def test_commodity(self, entries, _errors, options_map):
+    def test_commodity_btc(self, entries, _errors, options_map):
         """
         option "operating_currency" "EUR"
         plugin "beancount.plugins.auto_accounts"
@@ -58,6 +58,46 @@ class TestDocuments(cmptest.TestCase):
         self.assertEqual(got_entries[-1].meta.get('high', ''), '56930.52 EUR')
         self.assertEqual(got_entries[-1].meta.get('low', ''), '56246.83 EUR')
         self.assertEqual(got_entries[-1].meta.get('volume', ''), '4101671')
+
+    @loader.load_doc(expect_errors=False)
+    def test_commodity_abc(self, entries, _errors, options_map):
+        """
+        option "operating_currency" "EUR"
+        plugin "beancount.plugins.auto_accounts"
+        2009-01-01 commodity A.B.C
+        """
+        self.assertListEqual(
+            options_map.get('operating_currency', []),
+            ['EUR'],
+        )
+
+        got_entries, got_errors = prices.prices(
+            entries,
+            options_map,
+            _helper.fixture_path('prices', 'valid'),
+        )
+
+        self.assertEqual(0, len(got_errors))
+        self.assertEqualEntries(
+            '''
+            2009-01-01 commodity A.B.C
+
+            2024-08-13 price A.B.C  66.400 EUR
+            2024-08-14 price A.B.C  66.000 EUR
+            2024-08-15 price A.B.C  66.100 EUR
+            2024-08-16 price A.B.C  66.100 EUR
+            2024-08-19 price A.B.C  66.200 EUR
+            2024-08-20 price A.B.C  66.000 EUR
+            2024-08-21 price A.B.C  66.200 EUR
+            2024-08-22 price A.B.C  66.200 EUR
+            2024-08-23 price A.B.C  65.800 EUR
+            2024-08-26 price A.B.C  66.200 EUR
+            ''', got_entries)
+
+        self.assertEqual(got_entries[-1].meta.get('open', ''), '65.800 EUR')
+        self.assertEqual(got_entries[-1].meta.get('high', ''), '66.300 EUR')
+        self.assertEqual(got_entries[-1].meta.get('low', ''), '65.300 EUR')
+        self.assertEqual(got_entries[-1].meta.get('volume', ''), '1230')
 
     @loader.load_doc(expect_errors=False)
     def test_non_existing_commodity(self, entries, _errors, options_map):
