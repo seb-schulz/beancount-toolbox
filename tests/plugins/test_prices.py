@@ -88,6 +88,42 @@ class TestPrices(cmptest.TestCase):
                          data.D('7754'))
 
     @loader.load_doc(expect_errors=False)
+    def test_commodity_bonds(self, entries, _errors, options_map):
+        """
+        option "operating_currency" "EUR"
+        plugin "beancount.plugins.auto_accounts"
+        2024-08-14 commodity BONDS
+        """
+        self.assertListEqual(
+            options_map.get('operating_currency', []),
+            ['EUR'],
+        )
+
+        got_entries, got_errors = prices.prices(
+            entries,
+            options_map,
+            _helper.fixture_path('prices', 'valid'),
+        )
+
+        self.assertEqual(0, len(got_errors))
+        self.assertEqualEntries(
+            '''
+            2024-08-14 commodity BONDS
+
+            2024-08-16 price BONDS   0.9692 EUR
+            2024-08-23 price BONDS   0.9745 EUR
+            2024-08-30 price BONDS   0.9788 EUR
+            2024-09-06 price BONDS   0.9892 EUR
+            2024-09-13 price BONDS   0.9877 EUR
+            ''', got_entries)
+
+        self.assertEqual(got_entries[-1].meta.get('open', ''), '0.9534 EUR')
+        self.assertEqual(got_entries[-1].meta.get('high', ''), '1.0041 EUR')
+        self.assertEqual(got_entries[-1].meta.get('low', ''), '0.9508 EUR')
+        self.assertEqual(got_entries[-1].meta.get('volume', ''),
+                         data.D('500000'))
+
+    @loader.load_doc(expect_errors=False)
     def test_non_existing_commodity(self, entries, _errors, options_map):
         """
         option "operating_currency" "EUR"

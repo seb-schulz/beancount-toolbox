@@ -37,9 +37,9 @@ def _parse_dt(dt):
     return datetime.date(year=x[2], month=x[1], day=x[0])
 
 
-def _amount_with_comma(val, c):
-    val = val.replace('.', '').replace(',', '.')
-    return f'{val} {c}'
+def _amount_with_comma(val, c, conv=lambda x: x):
+    val = conv(data.D(val.replace('.', '').replace(',', '.')))
+    return amount.from_string(f'{val} {c}')
 
 
 def _parse_csv_file(
@@ -60,8 +60,14 @@ def _parse_csv_file(
             start += 1
 
         for lineno, x in enumerate(csv.reader(fp, dialect), start=start):
+            if x[5] == '%':
+                op_c = operating_currency[0]
+                conv = lambda x: x / 100
+            else:
+                op_c = x[5]
+                conv = lambda x: x
             try:
-                a = amount.from_string(_amount_with_comma(x[4], x[5]))
+                a = _amount_with_comma(x[4], op_c, conv=conv)
             except ValueError as err:
                 yield None, PriceError(
                     data.new_metadata(file, lineno),
@@ -73,11 +79,12 @@ def _parse_csv_file(
             p = data.Price(
                 data.new_metadata(
                     file, lineno, {
-                        'open': _amount_with_comma(x[1], x[5]),
-                        'high': _amount_with_comma(x[2], x[5]),
-                        'low': _amount_with_comma(x[3], x[5]),
+                        'open': str(_amount_with_comma(x[1], op_c, conv=conv)),
+                        'high': str(_amount_with_comma(x[2], op_c, conv=conv)),
+                        'low': str(_amount_with_comma(x[3], op_c, conv=conv)),
                         'volume': x[6].replace('.', ''),
                     }), _parse_dt(x[0]), currency, a)
+
             if a.currency not in operating_currency:
                 yield p, PriceError(
                     data.new_metadata(file, lineno),
@@ -155,11 +162,12 @@ def prices(
                 if e is not None:
                     errors.append(e)
 
-            new_entries = [
-                _merge_prices(grouped) for grouped in _groupby_date(
-                    new_entries,
-                    _date_range(ce, new_entries[-1]),
-                ).values()
-            ]
-            entries.extend([x for x in new_entries if x is not None])
+            if len(new_entries) > 0:
+                new_entries = [
+                    _merge_prices(grouped) for grouped in _groupby_date(
+                        new_entries,
+                        _date_range(ce, new_entries[-1]),
+                    ).values()
+                ]
+                entries.extend([x for x in new_entries if x is not None])
     return entries, errors
