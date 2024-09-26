@@ -2,6 +2,10 @@
 test:
 	pytest -s
 
+.PHONY: watch
+watch:
+	/bin/bash -c "while true; do $(MAKE) test ; sleep 2 && inotifywait -r -e modify tests beancount_toolbox; done"
+
 .PHONY: lint
 lint:
 	ruff check
