@@ -1,0 +1,34 @@
+{
+  "name": "beancount-toolbox",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm@sha256:b87bec59ee604de9737b6be24a6b26929e52ce2f70a0042058ce92b01584e456",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
+      "packages": "bash-completion,inotify-tools"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.terminal.activateEnvironment": true,
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/venv/bin/python",
+        "ansible.python.interpreterPath": "${containerWorkspaceFolder}/venv/bin/python",
+        "ansible.ansible.path": "${containerWorkspaceFolder}/venv/bin/ansible",
+        "yaml.schemas": {
+          "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "all.yaml",
+          "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+        }
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "redhat.vscode-yaml",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+  "runArgs": ["--userns=keep-id"],
+  "containerUser": "vscode",
+  "onCreateCommand": "pipx install pip-tools ruff",
+  "postCreateCommand": "make setup"
+}

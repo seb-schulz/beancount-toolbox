@@ -4,7 +4,6 @@ import unittest
 from os import path
 from beancount import loader
 from beancount.core import data
-from beancount_toolbox import utils
 from beancount_toolbox.plugins import documents
 import datetime
 from tests import _helper

@@ -7,7 +7,6 @@ import typing
 from os import path
 
 from dateutil import rrule
-import pydantic
 from pydantic import functional_validators
 
 from beancount_toolbox import utils
@@ -62,10 +61,10 @@ def _parse_csv_file(
         for lineno, x in enumerate(csv.reader(fp, dialect), start=start):
             if x[5] == '%':
                 op_c = operating_currency[0]
-                conv = lambda x: x / 100
+                def conv(x): return x / 100
             else:
                 op_c = x[5]
-                conv = lambda x: x
+                def conv(x): return x
             try:
                 a = _amount_with_comma(x[4], op_c, conv=conv)
             except ValueError as err:

@@ -226,8 +226,9 @@ class TestDateRangeAndGrouping(cmptest.TestCase):
         self.assertEqual({}, prices._groupby_date([], []))
 
     def test_grouping(self):
-        P = lambda d: data.Price(data.new_metadata('<empty>', 0), d, None, None
-                                 )
+        def P(d):
+            return data.Price(data.new_metadata('<empty>', 0), d, None, None)
+
         got = prices._groupby_date(
             [
                 P(datetime.date(2024, 1, 1)),
