@@ -23,7 +23,8 @@
         "esbenp.prettier-vscode",
         "redhat.vscode-yaml",
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "Lencerf.beancount"
       ]
     }
   },
