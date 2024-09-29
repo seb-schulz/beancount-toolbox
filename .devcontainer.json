@@ -1,6 +1,6 @@
 {
   "name": "beancount-toolbox",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm@sha256:b87bec59ee604de9737b6be24a6b26929e52ce2f70a0042058ce92b01584e456",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm@sha256:5b5835ef872e72c47e3af1d48928163382627e1835febfd2e68048fea7dd0353",
   "features": {
     "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
       "packages": "bash-completion,inotify-tools"
