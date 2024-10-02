@@ -51,7 +51,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.20.0
     # via google-api-python-client
-google-api-python-client==2.146.0
+google-api-python-client==2.147.0
     # via beancount
 google-auth==2.35.0
     # via
@@ -74,7 +74,7 @@ iniconfig==2.0.0
     # via pytest
 itsdangerous==2.2.0
     # via flask
-jaraco-functools==4.0.2
+jaraco-functools==4.1.0
     # via cheroot
 jinja2==3.1.4
     # via
