@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-anyio==4.6.0
+anyio==4.6.2.post1
     # via watchfiles
 babel==2.16.0
     # via
@@ -33,7 +33,7 @@ certifi==2024.8.30
     # via requests
 chardet==5.2.0
     # via beancount
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 cheroot==10.0.1
     # via fava
@@ -41,7 +41,7 @@ click==8.1.7
     # via
     #   fava
     #   flask
-fava==1.28
+fava==1.29
     # via -r requirements.in
 flask==3.0.3
     # via
@@ -49,9 +49,9 @@ flask==3.0.3
     #   flask-babel
 flask-babel==4.0.0
     # via fava
-google-api-core==2.20.0
+google-api-core==2.21.0
     # via google-api-python-client
-google-api-python-client==2.147.0
+google-api-python-client==2.149.0
     # via beancount
 google-auth==2.35.0
     # via
@@ -83,7 +83,7 @@ jinja2==3.1.4
     #   flask-babel
 lxml==5.3.0
     # via beancount
-markdown2==2.5.0
+markdown2==2.5.1
     # via fava
 markupsafe==2.1.5
     # via
@@ -120,7 +120,7 @@ pydantic==2.9.2
     # via -r requirements.in
 pydantic-core==2.23.4
     # via pydantic
-pyparsing==3.1.4
+pyparsing==3.2.0
     # via httplib2
 pytest==8.3.3
     # via beancount
