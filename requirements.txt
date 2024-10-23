@@ -85,7 +85,7 @@ lxml==5.3.0
     # via beancount
 markdown2==2.5.1
     # via fava
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via
     #   jinja2
     #   werkzeug
