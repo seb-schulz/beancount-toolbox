@@ -7,7 +7,7 @@
     { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
     {
       "matchPackageNames": ["pydantic-core"],
-      "allowedVersions": "<=2.23.3"
+      "allowedVersions": "<=2.27.1"
     },
     {
       "matchPackageNames": ["bottle"],
