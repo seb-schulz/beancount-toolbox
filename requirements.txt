@@ -51,7 +51,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.23.0
     # via google-api-python-client
-google-api-python-client==2.153.0
+google-api-python-client==2.154.0
     # via beancount
 google-auth==2.36.0
     # via
@@ -105,7 +105,7 @@ ply==3.11
     #   fava
 proto-plus==1.25.0
     # via google-api-core
-protobuf==5.28.3
+protobuf==5.29.0
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -116,13 +116,13 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.1
     # via google-auth
-pydantic==2.9.2
+pydantic==2.10.2
     # via -r requirements.in
-pydantic-core==2.23.4
+pydantic-core==2.27.1
     # via pydantic
 pyparsing==3.2.0
     # via httplib2
-pytest==8.3.3
+pytest==8.3.4
     # via beancount
 python-dateutil==2.9.0.post0
     # via beancount

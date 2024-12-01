@@ -6,10 +6,6 @@
     { "matchManagers": ["pip_requirements"], "groupName": "python-packages" },
     { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
     {
-      "matchPackageNames": ["pydantic-core"],
-      "allowedVersions": "<=2.23.3"
-    },
-    {
       "matchPackageNames": ["bottle"],
       "allowedVersions": "<0.13"
     }
