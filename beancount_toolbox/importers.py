@@ -42,7 +42,7 @@ def _get_header_dict(config, head, dialect='excel', skip_lines: int = 0):
 
     has_header = pycsv.Sniffer().has_header(head)
     if not has_header:
-        return None
+        return {}
 
     header = next(pycsv.reader(io.StringIO(head), dialect=dialect))
     field_map = {
