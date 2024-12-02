@@ -191,6 +191,9 @@ class Categorizer(object):
         self._sha1v2 = sha1v2
         self.column_map = {}
 
+    def normalize_transaction(self, txn, row):
+        return txn
+
     def __call__(self, txn, row):
         if len(USLESS_LINKS & txn.links) > 0:
             txn = txn._replace(links=txn.links - USLESS_LINKS)
@@ -203,14 +206,19 @@ class Categorizer(object):
         if self._bic is not None:
             txn.meta['bic'] = row[self._bic]
 
+        txn = self.normalize_transaction(txn, row)
+
         if self._sha1v2 is not None:
             txn.meta['sha1v2'] = hashlib.sha1(''.join(
                 [row[i] for i in self._sha1v2]).encode('utf-8')).hexdigest()
 
+        def sanitize_row(x):
+            return re.sub(r'\s\s+', ' ', x, re.MULTILINE).strip()
+
         if len(self.column_map) > 0:
             txn.meta['columns'] = ''.join([
                 '{',
-                ','.join(f"{col!r}:{row[idx].strip()!r}"
+                ','.join(f"{col!r}:{sanitize_row(row[idx])!r}"
                          for col, idx in self.column_map.items()
                          if len(row[idx]) > 0 and idx not in (self._iban,
                                                               self._bic)),
