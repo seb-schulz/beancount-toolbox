@@ -111,7 +111,7 @@ class MobileFinanceImporter(importer.ImporterProtocol):
             if isinstance(entry, data.Balance) and entry.account in ar.keys():
                 yield entry._replace(account=ar[entry.account])
             elif isinstance(entry, data.Transaction) and any(
-                [p.account in ar.keys() for p in entry.postings]):
+                    [p.account in ar.keys() for p in entry.postings]):
                 yield entry._replace(postings=[
                     p._replace(account=ar.get(p.account, p.account))
                     for p in entry.postings
@@ -151,7 +151,7 @@ class MobileFinanceImporter(importer.ImporterProtocol):
                     entry._replace(
                         meta=dict(mobile_finance_hash=compare.hash_entry(
                             entry, exclude_meta=True),
-                                  **entry.meta))) for entry in entries
+                            **entry.meta))) for entry in entries
             ]
 
         return entries
@@ -184,7 +184,7 @@ class Categorizer(object):
         self._sha1v2 = sha1v2
         self.column_map = {}
 
-    def __call__(self, txn: data.Transaction, row):
+    def __call__(self, txn, row):
         if len(USLESS_LINKS & txn.links) > 0:
             txn = txn._replace(links=txn.links - USLESS_LINKS)
 
@@ -260,7 +260,7 @@ class Categorizer(object):
         return txn
 
 
-def hash_entry(txn: data.Transaction, meta_subset=[], debug=False):
+def hash_entry(txn, meta_subset=[], debug=False):
     hashobj = hashlib.sha1()
     for attr_name, attr_value in zip(txn._fields, txn):
         if attr_name in ('postings', 'meta', 'tags'):
