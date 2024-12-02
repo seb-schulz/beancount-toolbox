@@ -67,7 +67,14 @@ class CSVImporter(csv.Importer):
                     self.csv_dialect,
                     self.skip_lines,
                 ))
-        return super().extract(file, *args, **kwargs)
+        entries = super().extract(file, *args, **kwargs)
+        for i in range(len(entries)):
+            entry = entries[i]
+            entries[i] = entry._replace(
+                payee=re.sub(r'\s\s+', ' ', entry.payee, re.MULTILINE),
+                links=set([x.replace(' ', '') for x in entry.links])
+            )
+        return entries
 
 
 def keep_similar_old_entries(new_entries, old_entries):
