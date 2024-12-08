@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-anyio==4.6.2.post1
+anyio==4.7.0
     # via watchfiles
 babel==2.16.0
     # via
@@ -105,7 +105,7 @@ ply==3.11
     #   fava
 proto-plus==1.25.0
     # via google-api-core
-protobuf==5.29.0
+protobuf==5.29.1
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -116,7 +116,7 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.1
     # via google-auth
-pydantic==2.10.2
+pydantic==2.10.3
     # via -r requirements.in
 pydantic-core==2.27.1
     # via pydantic
@@ -140,7 +140,7 @@ rsa==4.9
     # via google-auth
 simplejson==3.19.3
     # via fava
-six==1.16.0
+six==1.17.0
     # via
     #   pdfminer2
     #   python-dateutil
