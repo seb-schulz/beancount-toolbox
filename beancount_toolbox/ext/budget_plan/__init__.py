@@ -69,7 +69,7 @@ class BudgetPlan(FavaExtensionBase):
         ] if x.balance is not None]
 
         rows.append(Row(gettext('Net Profit'), reduce(
-            amount.add, [x.balance for x in rows])))
+            amount.add, [x.balance for x in rows if account_types.is_root_account(x.account, acctypes)])))
 
         return [
             Portfolio(

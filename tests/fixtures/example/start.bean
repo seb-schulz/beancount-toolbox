@@ -6660,3 +6660,5 @@ option "operating_currency" "USD"
 2024-01-01 custom "budget" Expenses:Financial:Commissions "yearly" 9,690.00 USD
 2024-01-01 custom "budget" Expenses:Financial:Fees "yearly" 225.00 USD
 2024-01-01 custom "budget" Expenses:Food:Groceries "yearly" 76.00 USD
+2024-01-01 custom "budget" Expenses:Food:Groceries "yearly" 76.00 USD
+2024-01-01 custom "budget" Income:US:BayBook:Salary "monthly" -1000 USD
