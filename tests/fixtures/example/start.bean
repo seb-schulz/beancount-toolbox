@@ -6654,3 +6654,9 @@ option "operating_currency" "USD"
 
 * Cash
 
+
+2020-09-20 custom "fava-extension" "beancount_toolbox.ext.budget_plan"
+
+2024-01-01 custom "budget" Expenses:Financial:Commissions "yearly" 9,690.00 USD
+2024-01-01 custom "budget" Expenses:Financial:Fees "yearly" 225.00 USD
+2024-01-01 custom "budget" Expenses:Food:Groceries "yearly" 76.00 USD

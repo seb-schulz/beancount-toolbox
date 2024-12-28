@@ -1,0 +1,8 @@
+{% import "_query_table.html" as querytable %} {% for plan in
+extension.budget_plan() %}
+<h3>{{ plan.title }}</h3>
+{{ querytable.querytable(ledger, None, plan.types, plan.rows) }}
+<br />
+{% else %}
+<h3>No budget plan found.</h3>
+{% endfor %}
