@@ -19,7 +19,7 @@ version = {attr = "beancount_toolbox.__version__"}
 dependencies = {file = "requirements.txt"}
 
 [tool.setuptools.package-data]
-"beancount_toolbox.data" = ["*.rasi", "beancount_toolbox/ext/budget_plan/templates/BudgetPlan.html"]
+"beancount_toolbox.data" = ["*.rasi", "*.html"]
 
 [tool.pytest.ini_options]
 pythonpath = "."
