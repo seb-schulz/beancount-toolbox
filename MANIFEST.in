@@ -1,0 +1,7 @@
+exclude .gitignore
+exclude .devcontainer.json
+prune .github
+prune .vscode
+
+recursive-include beancount_toolbox/data/ *.rasi
+recursive-include beancount_toolbox/ext/*/templates *.html
