@@ -33,7 +33,7 @@ certifi==2024.12.14
     # via requests
 chardet==5.2.0
     # via beancount
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
 cheroot==10.0.1
     # via fava
@@ -154,7 +154,7 @@ typing-extensions==4.12.2
     #   pydantic-core
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==2.2.3
+urllib3==2.3.0
     # via requests
 watchfiles==1.0.3
     # via fava
