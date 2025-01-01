@@ -2,6 +2,7 @@ exclude .gitignore
 exclude .devcontainer.json
 prune .github
 prune .vscode
+prune node_modules
 
 recursive-include beancount_toolbox/data/ *.rasi
 recursive-include beancount_toolbox/ext/*/templates *.html
