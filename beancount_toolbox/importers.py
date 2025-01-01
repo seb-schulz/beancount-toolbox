@@ -71,7 +71,7 @@ class CSVImporter(csv.Importer):
         for i in range(len(entries)):
             entry = entries[i]
             entries[i] = entry._replace(
-                payee=re.sub(r'\s\s+', ' ', entry.payee, re.MULTILINE),
+                payee=re.sub(r'\s\s+', ' ', entry.payee or '', re.MULTILINE),
                 links=set([x.replace(' ', '') for x in entry.links])
             )
         return entries
