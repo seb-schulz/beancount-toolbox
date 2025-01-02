@@ -39,9 +39,9 @@ class BudgetPlan(FavaExtensionBase):
     report_title = 'Budget Plan'
     has_js_module = True
 
-    def budget_plan(self) -> BudgetPosition:
+    def budget_plan(self) -> str:
         if g.filtered.date_range is None:
-            return []
+            return 'null'
 
         root = g.filtered.root_tree
 

@@ -80,65 +80,6 @@ function BudgetPlan({ name, positions, children }: Position) {
       <Position name={name} positions={positions} />
     </>
   );
-  //   return (
-  //     <div className="row">
-  //       <ol className="flex-table tree-table-new">
-  //         <li className="head">
-  //           <p>
-  //             <span className="account-header"></span>
-  //             <span className="num" title="US Dollar">
-  //               USD
-  //             </span>
-  //             <span className="num other">Other</span>
-  //           </p>
-  //         </li>
-  //         <li>
-  //           <p>
-  //             <span
-  //               className="droptarget account-header"
-  //               data-account-name="Assets"
-  //             >
-  //               <button type="button" className="unset">
-  //                 ▾
-  //               </button>
-  //               <a
-  //                 href="/example-beancount-file/account/Assets/?time=2024"
-  //                 className="account"
-  //               >
-  //                 Assets
-  //               </a>
-  //             </span>
-  //             <span className="num dimmed">112325.77 </span>
-  //             <span className="num other dimmed">
-  //               <span title="Employer Vacation Hours">−136 VACHR</span> <br />
-  //             </span>
-  //           </p>
-  //         </li>
-  //         <li>
-  //           <p>
-  //             <span
-  //               className="droptarget account-intent"
-  //               data-account-name="Assets:US"
-  //             >
-  //               <button type="button" className="unset">
-  //                 ▾
-  //               </button>
-  //               <a
-  //                 href="/example-beancount-file/account/Assets:US/?time=2024"
-  //                 className="account"
-  //               >
-  //                 US
-  //               </a>
-  //             </span>
-  //             <span className="num dimmed">112325.77 </span>
-  //             <span className="num other dimmed">
-  //               <span title="Employer Vacation Hours">−136 VACHR</span> <br />
-  //             </span>
-  //           </p>
-  //         </li>
-  //       </ol>
-  //     </div>
-  //   );
 }
 
 const index = {
@@ -157,16 +98,19 @@ const index = {
     const element = document.getElementById("budget-plan") as HTMLElement;
     const root = ReactDOM.createRoot(element);
 
-    const budget = JSON.parse(element.dataset.budget || "");
-    root.render(
-      <React.StrictMode>
-        <BudgetPlan
-          name={budget.name}
-          positions={budget.positions}
-          children={budget.children}
-        />
-      </React.StrictMode>
+    const budget = JSON.parse(element.dataset.budget || "null");
+
+    const budgetPlan = budget ? (
+      <BudgetPlan
+        name={budget.name}
+        positions={budget.positions}
+        children={budget.children}
+      />
+    ) : (
+      <div>No budget data. Maybe time period undefined.</div>
     );
+
+    root.render(<React.StrictMode>{budgetPlan}</React.StrictMode>);
   },
 };
 
