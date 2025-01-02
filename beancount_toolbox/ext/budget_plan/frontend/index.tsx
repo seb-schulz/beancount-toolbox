@@ -24,6 +24,7 @@ function Position({ name, positions, children }: Position) {
     );
 
   let childrenToggle: React.JSX.Element | null = null;
+  let numClassName = "num";
   if (children && Object.keys(children).length > 0) {
     childrenToggle = (
       <span
@@ -33,6 +34,8 @@ function Position({ name, positions, children }: Position) {
         {showChildren ? "▾" : "▸ "}
       </span>
     );
+
+    if (showChildren) numClassName += " dimmed";
   }
 
   return (
@@ -42,7 +45,7 @@ function Position({ name, positions, children }: Position) {
           {childrenToggle} {name}
         </li>
         {Object.keys(positions).map((currency) => (
-          <li key={currency} className="num">
+          <li key={currency} className={numClassName}>
             {positions[currency]}
           </li>
         ))}
