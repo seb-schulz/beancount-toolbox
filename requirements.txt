@@ -41,7 +41,7 @@ click==8.1.8
     # via
     #   fava
     #   flask
-fava==1.29
+fava==1.30
     # via -r requirements.in
 flask==3.1.0
     # via
@@ -120,7 +120,7 @@ pydantic==2.10.4
     # via -r requirements.in
 pydantic-core==2.27.2
     # via pydantic
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via httplib2
 pytest==8.3.4
     # via beancount
