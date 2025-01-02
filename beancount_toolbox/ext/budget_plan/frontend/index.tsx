@@ -10,16 +10,25 @@ interface Position {
   positions: {
     [currency: string]: number;
   };
+  defaultShowChildren?: boolean;
   children?: PositionChildren;
 }
 
-function Position({ name, positions, children }: Position) {
-  const [showChildren, setShowChildren] = React.useState(true);
+function Position({
+  name,
+  positions,
+  defaultShowChildren,
+  children,
+}: Position) {
+  const [showChildren, setShowChildren] = React.useState(defaultShowChildren);
   const positionList = showChildren &&
     children &&
     Object.keys(children).length > 0 && (
       <div>
-        <PositionList children={children} />
+        <PositionList
+          children={children}
+          defaultShowChildren={!!defaultShowChildren}
+        />
       </div>
     );
 
@@ -55,7 +64,13 @@ function Position({ name, positions, children }: Position) {
   );
 }
 
-function PositionList({ children }: { children?: PositionChildren }) {
+function PositionList({
+  defaultShowChildren,
+  children,
+}: {
+  defaultShowChildren: boolean;
+  children?: PositionChildren;
+}) {
   return (
     children &&
     Object.keys(children).map((account) => (
@@ -64,6 +79,7 @@ function PositionList({ children }: { children?: PositionChildren }) {
         name={account}
         positions={children[account].positions}
         children={children[account].children}
+        defaultShowChildren={defaultShowChildren}
       />
     ))
   );
@@ -79,7 +95,7 @@ function BudgetPlan({ name, positions, children }: Position) {
           <li key={currency}>{currency}</li>
         ))}
       </ul>
-      <PositionList children={children} />
+      <PositionList children={children} defaultShowChildren={false} />
       <Position name={name} positions={positions} />
     </>
   );
@@ -100,7 +116,6 @@ const index = {
 
     const element = document.getElementById("budget-plan") as HTMLElement;
     const root = ReactDOM.createRoot(element);
-
     const budget = JSON.parse(element.dataset.budget || "null");
 
     const budgetPlan = budget ? (
