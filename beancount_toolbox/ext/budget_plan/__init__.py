@@ -1,80 +1,80 @@
-from fava.context import g
-from fava.ext import FavaExtensionBase
-from fava.core import conversion
 import dataclasses
+import json
 import typing
 from decimal import Decimal
 
-from fava.beans import create
-from beancount.core import amount, account_types
-from fava.beans.types import BeancountOptions
+from beancount.core import account_types, amount
 from beancount.parser import options
-from fava.core import budgets
-from functools import reduce
+from fava.context import g
+from fava.core import budgets, number
+from fava.ext import FavaExtensionBase
 from flask_babel import gettext  # type: ignore[import-untyped]
 
 
-class Row(typing.NamedTuple):
-    """A row in the portfolio tables."""
-
-    account: str
-    balance: Decimal | None
-
-
 @dataclasses.dataclass
-class Portfolio:
-    """A portfolio."""
-
-    title: str
-    rows: list[Row]
-    types = (
-        ("account", str),
-        ("balance", amount.Amount),
-
-    )
+class BudgetPosition:
+    name: str
+    positions: typing.Dict[str, Decimal]
+    children: typing.Dict[str, 'BudgetPosition']
 
 
-def _convert_to_amount(value: dict[str, Decimal], options: BeancountOptions) -> amount.Amount | None:
-    currency = options['operating_currency'][0]
-    try:
-        return amount.Amount(value[currency], currency)
-    except KeyError:
-        pass
+def BudgetPlanEncoder(format_decimal: number.DecimalFormatModule):
+    class WrapperKlass(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, BudgetPosition):
+                return dict(
+                    name=obj.name,
+                    positions={c: format_decimal(
+                        v, c)for c, v in obj.positions.items()},
+                    children=obj.children,
+                )
+
+            if isinstance(obj, Decimal):
+                return f'{obj:.6f}'
+            return super().default(obj)
+    return WrapperKlass
 
 
 class BudgetPlan(FavaExtensionBase):
     report_title = 'Budget Plan'
+    has_js_module = True
 
-    def budget_plan(self):
+    def budget_plan(self) -> BudgetPosition:
         if g.filtered.date_range is None:
             return []
 
         root = g.filtered.root_tree
 
         b, err = budgets.parse_budgets(self.ledger.all_entries_by_type.Custom)
+        if err:
+            raise ValueError(err)
 
         acctypes = options.get_account_types(self.ledger.options)
 
-        rows = [x for x in [
-            Row(
-                a,
-                _convert_to_amount(budgets.calculate_budget_children(
-                    b, a, g.filtered.date_range.begin, g.filtered.date_range.end,
-                ), self.ledger.options),
-            )
+        children: typing.Dict[str, BudgetPosition] = {}
 
-            for a in root.accounts if account_types.is_income_statement_account(
-                a, acctypes,
+        for acc in root.accounts:
+            if not account_types.is_income_statement_account(
+                acc, acctypes,
+            ):
+                continue
+            pos = budgets.calculate_budget_children(
+                b, acc, g.filtered.date_range.begin, g.filtered.date_range.end,
             )
-        ] if x.balance is not None]
+            if len(pos) == 0:
+                continue
 
-        rows.append(Row(gettext('Net Profit'), reduce(
-            amount.add, [x.balance for x in rows if account_types.is_root_account(x.account, acctypes)])))
+            cur = children.setdefault(
+                acc.split(':')[0], BudgetPosition('', {}, {}))
 
-        return [
-            Portfolio(
-                title=f"Budget for the period {
-                    g.filtered.date_range.begin} - {g.filtered.date_range.end}",
-                rows=rows,
-            )
-        ]
+            for x in acc.split(':')[1:]:
+                cur = cur.children.setdefault(x, BudgetPosition('', {}, {}))
+            cur.name = acc
+            cur.positions = pos
+
+        positions = {}
+        for x in children.values():
+            for currency, num in x.positions.items():
+                positions[currency] = positions.get(currency, amount.ZERO)-num
+
+        return json.dumps(BudgetPosition(gettext('Net Profit'), positions, children), cls=BudgetPlanEncoder(self.ledger.format_decimal))

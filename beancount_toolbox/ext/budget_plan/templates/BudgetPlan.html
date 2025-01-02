@@ -1,8 +1,66 @@
-{% import "_query_table.html" as querytable %} {% for plan in
-extension.budget_plan() %}
-<h3>{{ plan.title }}</h3>
-{{ querytable.querytable(ledger, None, plan.types, plan.rows) }}
-<br />
-{% else %}
-<h3>No budget plan found.</h3>
-{% endfor %}
+{% import "_query_table.html" as querytable %}
+
+<style>
+  #budget-plan {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  #budget-plan ul {
+    display: flex;
+    padding: 0;
+    margin: 0;
+  }
+
+  #budget-plan div {
+    margin-left: 1em;
+  }
+
+  #budget-plan > ul:first-child {
+    font-weight: 400;
+    color: var(--table-header-text);
+    background-color: var(--table-header-background);
+  }
+
+  #budget-plan > ul:last-child {
+    font-weight: 400;
+    color: var(--table-header-text);
+    background-color: var(--table-header-background);
+    text-decoration: double underline;
+  }
+
+  #budget-plan > ul:last-child > li:first-child {
+    text-decoration: underline;
+  }
+
+  #budget-plan > ul:nth-child(1) > li {
+    text-align: center;
+  }
+
+  #budget-plan ul:hover > li {
+    background-color: var(--table-background-even);
+  }
+
+  #budget-plan ul > li {
+    padding: 2px 5px;
+    white-space: nowrap;
+    border: 1px solid var(--table-border);
+    box-sizing: border-box;
+
+    min-width: 7em;
+  }
+
+  #budget-plan ul > li.num {
+    width: 7em;
+    font-family: var(--font-family-monospaced);
+    color: var(--text-color);
+    text-align: right;
+  }
+
+  #budget-plan ul > li:nth-child(1) {
+    flex-grow: 1;
+  }
+</style>
+<div id="budget-plan" data-budget="{{ extension.budget_plan() }}">
+  Not yet loaded
+</div>

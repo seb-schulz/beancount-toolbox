@@ -4,6 +4,9 @@
   "features": {
     "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
       "packages": "bash-completion,inotify-tools"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest"
     }
   },
   "customizations": {
@@ -17,6 +20,9 @@
         "yaml.schemas": {
           "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "all.yaml",
           "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+        },
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
         }
       },
       "extensions": [
@@ -30,6 +36,6 @@
   },
   "runArgs": ["--userns=keep-id"],
   "containerUser": "vscode",
-  "onCreateCommand": "pipx install pip-tools ruff",
+  "onCreateCommand": "pipx install pip-tools ruff isort",
   "postCreateCommand": "make setup"
 }

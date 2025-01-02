@@ -6,3 +6,4 @@ prune node_modules
 
 recursive-include beancount_toolbox/data/ *.rasi
 recursive-include beancount_toolbox/ext/*/templates *.html
+recursive-include beancount_toolbox/ext/* *.js
