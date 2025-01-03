@@ -51,7 +51,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.24.0
     # via google-api-python-client
-google-api-python-client==2.156.0
+google-api-python-client==2.157.0
     # via beancount
 google-auth==2.37.0
     # via
