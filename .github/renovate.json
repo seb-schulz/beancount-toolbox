@@ -1,17 +1,35 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices"],
-  "baseBranches": ["main"],
+  "extends": [
+    "config:best-practices"
+  ],
+  "baseBranches": [
+    "main"
+  ],
   "rebaseWhen": "conflicted",
   "packageRules": [
-    { "matchManagers": ["pip_requirements"], "groupName": "python-packages" },
-    { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
     {
-      "matchPackageNames": ["bottle"],
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "groupName": "python-packages"
+    },
+    {
+      "matchPackageNames": [
+        "beancount"
+      ],
+      "allowedVersions": "<3.0"
+    },
+    {
+      "matchPackageNames": [
+        "bottle"
+      ],
       "allowedVersions": "<0.13"
     },
     {
-      "managers": ["npm"],
+      "matchManagers": [
+        "npm"
+      ],
       "groupName": "npm-dependency"
     }
   ]
