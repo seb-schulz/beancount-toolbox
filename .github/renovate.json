@@ -1,5 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
   "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
   "packageRules": [
@@ -8,6 +9,10 @@
     {
       "matchPackageNames": ["bottle"],
       "allowedVersions": "<0.13"
+    },
+    {
+      "managers": ["npm"],
+      "groupName": "npm-dependency"
     }
   ]
 }
