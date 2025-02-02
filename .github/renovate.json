@@ -23,6 +23,10 @@
     {
       "matchPackageNames": ["pydantic-core"],
       "allowedVersions": ">=2.27.2 <2.28.0"
+    },
+    {
+      "matchPackageNames": ["tatsu"],
+      "allowedVersions": "<5.8.0"
     }
   ]
 }
