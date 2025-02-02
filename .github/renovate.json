@@ -31,6 +31,10 @@
         "npm"
       ],
       "groupName": "npm-dependency"
+    },
+    {
+      "matchPackageNames": ["pydantic-core"],
+      "allowedVersions": ">=2.27.2 <2.29.0"
     }
   ]
 }
