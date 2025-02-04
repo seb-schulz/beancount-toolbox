@@ -25,7 +25,7 @@ beangulp==0.2.0
     # via fava
 beanquery==0.1.0
     # via fava
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.2
     # via
     #   beancount
     #   beangulp
