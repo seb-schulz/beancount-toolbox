@@ -35,7 +35,7 @@ bottle==0.12.25
     # via
     #   -r requirements.in
     #   beancount
-cachetools==5.5.1
+cachetools==5.5.2
     # via google-auth
 certifi==2025.1.31
     # via requests
@@ -63,7 +63,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.24.1
     # via google-api-python-client
-google-api-python-client==2.161.0
+google-api-python-client==2.162.0
     # via beancount
 google-auth==2.38.0
     # via
@@ -72,7 +72,7 @@ google-auth==2.38.0
     #   google-auth-httplib2
 google-auth-httplib2==0.2.0
     # via google-api-python-client
-googleapis-common-protos==1.67.0
+googleapis-common-protos==1.68.0
     # via google-api-core
 httplib2==0.22.0
     # via
