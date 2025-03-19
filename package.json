@@ -5,8 +5,8 @@
     "watch": "esbuild beancount_toolbox/ext/budget_plan/frontend/index.tsx  --bundle --format=esm --outfile=beancount_toolbox/ext/budget_plan/BudgetPlan.js --watch"
   },
   "devDependencies": {
-    "esbuild": "0.25.0",
-    "prettier": "3.5.2"
+    "esbuild": "0.25.1",
+    "prettier": "3.5.3"
   },
   "dependencies": {
     "@types/react": "^19.0.2",
