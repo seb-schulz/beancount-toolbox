@@ -62,6 +62,36 @@ class TestDocuments(unittest.TestCase):
         self.assertEqual(5, len(entries))
 
     @loader.load_doc()
+    def test_valid_invoice_entries_without_tag(self, entries, errors, options_map):
+        """
+        2011-01-01 open Expenses:Food
+        2011-01-01 open Assets:Other
+
+        2011-05-17 * "Something"
+            invoice: "invoice.pdf"
+            Expenses:Food         1.00 USD
+            Assets:Other         -1.00 USD
+        """
+        self.assertEqual(0, len(errors))
+        entries, errors = documents.documents(entries, options_map, None)
+
+        self.assertEqual(0, len(errors))
+        self.assertEqual(5, len(entries))
+
+    @loader.load_doc()
+    def test_valid_balance_entry(self, entries, errors, options_map):
+        """
+        2011-01-01 open Assets:Other
+        2011-05-17 balance Assets:Other 0.00 USD
+          invoice: "invoice.pdf"
+        """
+        self.assertEqual(0, len(errors))
+        entries, errors = documents.documents(entries, options_map, None)
+
+        self.assertEqual(0, len(errors))
+        self.assertEqual(3, len(entries))
+
+    @loader.load_doc()
     def test_valid_document_entries(self, entries, errors, __):
         """
         plugin "beancount_toolbox.plugins.documents"

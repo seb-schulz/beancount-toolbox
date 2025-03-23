@@ -69,8 +69,10 @@ def documents(entries, options_map: typing.Mapping, config: str = None):
                         date,
                         acc,
                         file,
-                        entry.tags.copy(),
-                        entry.links.copy(),
+                        data.EMPTY_SET if getattr(
+                            entry, 'tags', None) is None else entry.tags.copy(),
+                        data.EMPTY_SET if getattr(
+                            entry, 'links', None) is None else entry.links.copy(),
                     ))
 
     entries.extend(new_documents)
