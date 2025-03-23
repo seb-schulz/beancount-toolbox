@@ -1,12 +1,10 @@
 {
   "name": "beancount-toolbox",
-  "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm@sha256:f84dde6b1993dca054dbeab997220a1e346ac1c6bf08af1f69412e47ac1d2200",
+  "image": "ghcr.io/sebatec-eu/hugo-devcontainer:1",
   "features": {
-    "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
-      "packages": "bash-completion,inotify-tools"
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "latest"
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "os-provided",
+      "toolsToInstall": "ruff,isort,pytest"
     }
   },
   "customizations": {
@@ -15,27 +13,15 @@
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.terminal.activateEnvironment": true,
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/venv/bin/python",
-        "ansible.python.interpreterPath": "${containerWorkspaceFolder}/venv/bin/python",
-        "ansible.ansible.path": "${containerWorkspaceFolder}/venv/bin/ansible",
-        "yaml.schemas": {
-          "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "all.yaml",
-          "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
-        },
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
         }
       },
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "redhat.vscode-yaml",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "Lencerf.beancount"
-      ]
+      "extensions": ["redhat.vscode-yaml", "Lencerf.beancount"]
     }
   },
   "runArgs": ["--userns=keep-id"],
   "containerUser": "vscode",
-  "onCreateCommand": "pipx install pip-tools ruff isort",
+  // "onCreateCommand": "pipx install pip-tools ruff isort",
   "postCreateCommand": "make setup"
 }
