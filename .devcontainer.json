@@ -1,6 +1,6 @@
 {
   "name": "beancount-toolbox",
-  "image": "ghcr.io/sebatec-eu/hugo-devcontainer:1",
+  "image": "ghcr.io/sebatec-eu/python-devcontainer:1",
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "version": "os-provided",
