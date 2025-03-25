@@ -23,7 +23,7 @@ beancount-reds-plugins==0.3.0
     # via -r requirements.in
 beangulp==0.2.0
     # via fava
-beanquery==0.1.0
+beanquery==0.2.0
     # via fava
 beautifulsoup4==4.13.3
     # via
@@ -146,7 +146,7 @@ python-magic==0.4.27
     # via
     #   beancount
     #   beangulp
-pytz==2025.1
+pytz==2025.2
     # via flask-babel
 pyyaml==6.0.2
     # via -r requirements.in
