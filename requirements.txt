@@ -23,8 +23,10 @@ beancount-reds-plugins==0.3.0
     # via -r requirements.in
 beangulp==0.2.0
     # via fava
-beanquery==0.2.0
-    # via fava
+beanquery==0.1.0
+    # via
+    #   -r requirements.in
+    #   fava
 beautifulsoup4==4.13.3
     # via
     #   beancount
@@ -53,7 +55,7 @@ click==8.1.8
     #   beanquery
     #   fava
     #   flask
-fava==1.30.1
+fava==1.30.2
     # via -r requirements.in
 flask==3.1.0
     # via
@@ -63,7 +65,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.24.2
     # via google-api-python-client
-google-api-python-client==2.165.0
+google-api-python-client==2.166.0
     # via beancount
 google-auth==2.38.0
     # via
@@ -119,7 +121,7 @@ ply==3.11
     #   fava
 proto-plus==1.26.1
     # via google-api-core
-protobuf==6.30.1
+protobuf==6.30.2
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -128,13 +130,13 @@ pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.4.1
+pyasn1-modules==0.4.2
     # via google-auth
-pydantic==2.10.6
+pydantic==2.11.2
     # via -r requirements.in
-pydantic-core==2.27.2
+pydantic-core==2.33.1
     # via pydantic
-pyparsing==3.2.2
+pyparsing==3.2.3
     # via httplib2
 pytest==8.3.5
     # via beancount
@@ -168,10 +170,14 @@ soupsieve==2.6
     # via beautifulsoup4
 tatsu==5.7.4
     # via beanquery
-typing-extensions==4.12.2
+typing-extensions==4.13.1
     # via
+    #   beautifulsoup4
     #   pydantic
     #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.3.0
