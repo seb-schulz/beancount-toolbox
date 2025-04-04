@@ -23,7 +23,7 @@ beancount-reds-plugins==0.3.0
     # via -r requirements.in
 beangulp==0.2.0
     # via fava
-beanquery==0.1.0
+beanquery==0.2.0
     # via
     #   -r requirements.in
     #   fava
