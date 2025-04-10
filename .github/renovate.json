@@ -1,32 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices"],
-  "baseBranches": ["main"],
-  "rebaseWhen": "conflicted",
+  "extends": [
+    "config:best-practices",
+    "https://gist.githubusercontent.com/seb-schulz/86ae2e7ef1de082149821a507f111aa8/raw/renovate.json"
+  ],
   "packageRules": [
-    {
-      "matchManagers": ["pip_requirements"],
-      "groupName": "python-packages"
-    },
-    {
-      "matchPackageNames": ["beancount"],
-      "allowedVersions": "<3.0"
-    },
-    {
-      "matchPackageNames": ["bottle"],
-      "allowedVersions": "<0.13"
-    },
-    {
-      "matchManagers": ["npm"],
-      "groupName": "npm-dependency"
-    },
+    { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
+    { "matchPackageNames": ["bottle"], "allowedVersions": "<0.13" },
     {
       "matchPackageNames": ["pydantic-core"],
       "allowedVersions": ">=2.33.1 <2.34.0"
     },
-    {
-      "matchPackageNames": ["tatsu"],
-      "allowedVersions": "<5.8.0"
-    }
+    { "matchPackageNames": ["tatsu"], "allowedVersions": "<5.8.0" }
   ]
 }
