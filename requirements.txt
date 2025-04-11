@@ -170,7 +170,7 @@ soupsieve==2.6
     # via beautifulsoup4
 tatsu==5.7.4
     # via beanquery
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   beautifulsoup4
     #   pydantic
@@ -180,7 +180,7 @@ typing-inspection==0.4.0
     # via pydantic
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==2.3.0
+urllib3==2.4.0
     # via requests
 watchfiles==1.0.5
     # via fava
