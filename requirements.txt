@@ -27,7 +27,7 @@ beanquery==0.2.0
     # via
     #   -r requirements.in
     #   fava
-beautifulsoup4==4.13.3
+beautifulsoup4==4.13.4
     # via
     #   beancount
     #   beangulp
@@ -65,16 +65,16 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.24.2
     # via google-api-python-client
-google-api-python-client==2.166.0
+google-api-python-client==2.167.0
     # via beancount
-google-auth==2.38.0
+google-auth==2.39.0
     # via
     #   google-api-core
     #   google-api-python-client
     #   google-auth-httplib2
 google-auth-httplib2==0.2.0
     # via google-api-python-client
-googleapis-common-protos==1.69.2
+googleapis-common-protos==1.70.0
     # via google-api-core
 httplib2==0.22.0
     # via
@@ -156,7 +156,7 @@ requests==2.32.3
     # via
     #   beancount
     #   google-api-core
-rsa==4.9
+rsa==4.9.1
     # via google-auth
 simplejson==3.20.1
     # via fava
@@ -170,7 +170,7 @@ soupsieve==2.6
     # via beautifulsoup4
 tatsu==5.7.4
     # via beanquery
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   beautifulsoup4
     #   pydantic
@@ -180,7 +180,7 @@ typing-inspection==0.4.0
     # via pydantic
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==2.3.0
+urllib3==2.4.0
     # via requests
 watchfiles==1.0.5
     # via fava
