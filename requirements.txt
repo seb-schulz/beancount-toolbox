@@ -109,7 +109,7 @@ more-itertools==10.6.0
     # via
     #   cheroot
     #   jaraco-functools
-packaging==24.2
+packaging==25.0
     # via pytest
 pdfminer2==20151206
     # via beancount
