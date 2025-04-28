@@ -9,7 +9,7 @@
     { "matchPackageNames": ["bottle"], "allowedVersions": "<0.13" },
     {
       "matchPackageNames": ["pydantic-core"],
-      "allowedVersions": ">=2.33.1 <2.34.0"
+      "allowedVersions": "=2.33.1"
     },
     { "matchPackageNames": ["tatsu"], "allowedVersions": "<5.8.0" }
   ]
