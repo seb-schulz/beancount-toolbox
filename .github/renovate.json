@@ -25,6 +25,7 @@
       "groupName": "pydantic stack",
       "automerge": true
     },
-    { "matchPackageNames": ["tatsu"], "allowedVersions": "<5.8.0" }
+    { "matchPackageNames": ["tatsu"], "allowedVersions": "<5.8.0" },
+    { "matchPackageNames": ["beanquery"], "allowedVersions": "<0.2.0" }
   ]
 }
