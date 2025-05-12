@@ -45,11 +45,11 @@ chardet==5.2.0
     # via
     #   beancount
     #   beangulp
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via requests
 cheroot==10.0.1
     # via fava
-click==8.1.8
+click==8.2.0
     # via
     #   beangulp
     #   beanquery
@@ -65,9 +65,9 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.24.2
     # via google-api-python-client
-google-api-python-client==2.168.0
+google-api-python-client==2.169.0
     # via beancount
-google-auth==2.39.0
+google-auth==2.40.1
     # via
     #   google-api-core
     #   google-api-python-client
