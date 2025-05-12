@@ -4,6 +4,15 @@
     "config:best-practices",
     "https://gist.githubusercontent.com/seb-schulz/86ae2e7ef1de082149821a507f111aa8/raw/renovate.json"
   ],
+  "pip-compile": {
+    "managerFilePatterns": ["(^|/)requirements\\.txt$"]
+  },
+  "pip_requirements": {
+    "enabled": false
+  },
+  "pip_setup": {
+    "enabled": false
+  },
   "packageRules": [
     { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
     { "matchPackageNames": ["bottle"], "allowedVersions": "<0.13" },

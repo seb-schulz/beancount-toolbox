@@ -4,4 +4,3 @@ pyyaml
 pydantic
 fava
 bottle<0.13
-beanquery<0.2.0
