@@ -19,12 +19,6 @@
   "packageRules": [
     { "matchPackageNames": ["beancount"], "allowedVersions": "<3.0" },
     { "matchPackageNames": ["bottle"], "allowedVersions": "<0.13" },
-    {
-      "matchManagers": ["pip_requirements"],
-      "matchPackageNames": ["pydantic", "pydantic-core"],
-      "groupName": "pydantic stack",
-      "automerge": true
-    },
     { "matchPackageNames": ["tatsu"], "allowedVersions": "<5.8.0" },
     { "matchPackageNames": ["beanquery"], "allowedVersions": "<0.2.0" }
   ]
