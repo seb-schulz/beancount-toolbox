@@ -132,9 +132,9 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
-pydantic==2.11.3
+pydantic==2.11.4
     # via -r requirements.in
-pydantic-core==2.33.1
+pydantic-core==2.34.1
     # via pydantic
 pyparsing==3.2.3
     # via httplib2
