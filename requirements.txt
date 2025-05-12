@@ -47,7 +47,7 @@ charset-normalizer==3.4.2
     # via requests
 cheroot==10.0.1
     # via fava
-click==8.2.0
+click==8.1.8
     # via
     #   beangulp
     #   beanquery

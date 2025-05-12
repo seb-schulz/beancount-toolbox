@@ -5,12 +5,15 @@
     "https://gist.githubusercontent.com/seb-schulz/86ae2e7ef1de082149821a507f111aa8/raw/renovate.json"
   ],
   "pip-compile": {
-    "managerFilePatterns": ["(^|/)requirements\\.txt$"]
+    "managerFilePatterns": ["/(^|/)requirements\\.txt$/"]
   },
   "pip_requirements": {
     "enabled": false
   },
   "pip_setup": {
+    "enabled": false
+  },
+  "pep621": {
     "enabled": false
   },
   "packageRules": [
