@@ -24,7 +24,9 @@ beancount-reds-plugins==0.3.0
 beangulp==0.2.0
     # via fava
 beanquery==0.1.0
-    # via fava
+    # via
+    #   -r requirements.in
+    #   fava
 beautifulsoup4==4.13.4
     # via
     #   beancount
@@ -47,7 +49,7 @@ charset-normalizer==3.4.2
     # via requests
 cheroot==10.0.1
     # via fava
-click==8.1.8
+click==8.2.0
     # via
     #   beangulp
     #   beanquery
@@ -130,9 +132,9 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
-pydantic==2.11.3
+pydantic==2.11.4
     # via -r requirements.in
-pydantic-core==2.33.1
+pydantic-core==2.33.2
     # via pydantic
 pyparsing==3.2.3
     # via httplib2
