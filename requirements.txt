@@ -122,7 +122,7 @@ ply==3.11
     #   fava
 proto-plus==1.26.1
     # via google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   google-api-core
     #   googleapis-common-protos
