@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.10.0
     # via watchfiles
 babel==2.17.0
     # via
@@ -19,7 +19,7 @@ beancount==2.3.6
     #   beangulp
     #   beanquery
     #   fava
-beancount-reds-plugins==0.3.0
+beancount-reds-plugins==0.4.0
     # via -r requirements.in
 beangulp==0.2.0
     # via fava
@@ -39,13 +39,13 @@ bottle==0.12.25
     #   beancount
 cachetools==5.5.2
     # via google-auth
-certifi==2025.6.15
+certifi==2025.8.3
     # via requests
 chardet==5.2.0
     # via
     #   beancount
     #   beangulp
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 cheroot==10.0.1
     # via fava
@@ -55,7 +55,7 @@ click==8.2.1
     #   beanquery
     #   fava
     #   flask
-fava==1.30.4
+fava==1.30.5
     # via -r requirements.in
 flask==3.1.1
     # via
@@ -65,7 +65,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.25.1
     # via google-api-python-client
-google-api-python-client==2.175.0
+google-api-python-client==2.178.0
     # via beancount
 google-auth==2.40.3
     # via
@@ -99,7 +99,7 @@ lxml==6.0.0
     # via
     #   beancount
     #   beangulp
-markdown2==2.5.3
+markdown2==2.5.4
     # via fava
 markupsafe==3.0.2
     # via
