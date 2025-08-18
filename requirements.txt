@@ -65,7 +65,7 @@ flask-babel==4.0.0
     # via fava
 google-api-core==2.25.1
     # via google-api-python-client
-google-api-python-client==2.178.0
+google-api-python-client==2.179.0
     # via beancount
 google-auth==2.40.3
     # via
@@ -122,7 +122,7 @@ ply==3.11
     #   fava
 proto-plus==1.26.1
     # via google-api-core
-protobuf==6.31.1
+protobuf==6.32.0
     # via
     #   google-api-core
     #   googleapis-common-protos
