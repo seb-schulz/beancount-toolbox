@@ -1,8 +1,0 @@
-beancount<3.0,>=2.3
-beancount-reds-plugins
-pyyaml
-pydantic
-fava
-bottle<0.13
-beanquery<0.2.0
-tatsu<5.8.0

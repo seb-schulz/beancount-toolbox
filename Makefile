@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	pytest -s
+	uv run pytest -s
 
 .PHONY: watch
 watch:
@@ -8,7 +8,7 @@ watch:
 
 .PHONY: lint
 lint:
-	ruff check
+	uv run ruff check
 
 .PHONY: beancount_toolbox/data/beancount-toolbox-export-schema.json
 beancount_toolbox/data/beancount-toolbox-export-schema.json:

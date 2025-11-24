@@ -1,10 +1,24 @@
 [project]
 name = "beancount-toolbox"
-dynamic = ["version","dependencies"]
-requires-python = ">=3.11"
-maintainers = [
-  {name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com"}
+version = "2.0.0a1"
+requires-python = ">=3.12"
+maintainers = [{ name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com" }]
+dependencies = [
+    "beancount>=2.3,<3.0",
+    "beancount-reds-plugins",
+    "pyyaml",
+    "pydantic",
+    "fava",
+    "bottle<0.13",
+    "beanquery<0.2.0",
+    "tatsu<5.8.0",
 ]
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+]
+
 [project.scripts]
 bean-rofi = "beancount_toolbox.cli.rofi:main"
 bean-check = "beancount.scripts.check:main"
@@ -17,6 +31,12 @@ fava = "fava.cli:main"
 [tool.pytest.ini_options]
 pythonpath = "."
 
-[tool.setuptools.dynamic]
-version = {attr = "beancount_toolbox.__version__"}
-dependencies = {file = "requirements.txt"}
+[tool.uv]
+package = true
+
+[tool.setuptools]
+packages = ["beancount_toolbox"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
