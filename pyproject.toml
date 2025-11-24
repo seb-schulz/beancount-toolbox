@@ -1,10 +1,10 @@
 [project]
 name = "beancount-toolbox"
-version = "2.0.0a4"
+version = "2.0.0a5"
 requires-python = ">=3.12"
 maintainers = [{ name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com" }]
 dependencies = [
-    "beancount>=2.3,<3.0",
+    "beancount",
     "beancount-reds-plugins",
     "pyyaml",
     "pydantic",
