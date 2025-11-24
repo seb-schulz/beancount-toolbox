@@ -1,6 +1,6 @@
 [project]
 name = "beancount-toolbox"
-version = "2.0.0a1"
+version = "2.0.0a2"
 requires-python = ">=3.12"
 maintainers = [{ name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com" }]
 dependencies = [
@@ -20,11 +20,9 @@ dev = [
 ]
 
 [project.scripts]
-bean-rofi = "beancount_toolbox.cli.rofi:main"
 bean-check = "beancount.scripts.check:main"
 bean-format = "beancount.scripts.format:main"
 bean-query = "beancount.query.shell:main"
-bean-web = "beancount_toolbox.cli.web:main"
 bean-export = "beancount_toolbox.cli.export:main"
 fava = "fava.cli:main"
 
@@ -36,6 +34,13 @@ package = true
 
 [tool.setuptools]
 packages = ["beancount_toolbox"]
+
+[tool.setuptools.package-data]
+"beancount_toolbox" = [
+  "beancount_toolbox/ext/**/templates/*.html",
+  "beancount_toolbox/ext/**/*.js",
+  "beancount_toolbox/data/**",
+]
 
 [build-system]
 requires = ["setuptools", "wheel"]
