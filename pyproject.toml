@@ -10,8 +10,7 @@ dependencies = [
     "pydantic",
     "fava",
     "bottle<0.13",
-    "beanquery<0.2.0",
-    "tatsu<5.8.0",
+    "beanquery",
 ]
 [project.optional-dependencies]
 dev = [
@@ -22,7 +21,7 @@ dev = [
 [project.scripts]
 bean-check = "beancount.scripts.check:main"
 bean-format = "beancount.scripts.format:main"
-bean-query = "beancount.query.shell:main"
+bean-query = "beanquery.shell:main"
 bean-export = "beancount_toolbox.cli.export:main"
 fava = "fava.cli:main"
 

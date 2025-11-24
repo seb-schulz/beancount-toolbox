@@ -1,11 +1,11 @@
-from os import path
 import os
 import typing
+from os import path
 
 
 def basepath_from_config(default,
                          options_map: typing.Mapping = {},
-                         config: str = None) -> os.PathLike:
+                         config: str | None = None) -> str:
     docpath = default if config is None else config
 
     if path.isabs(docpath):

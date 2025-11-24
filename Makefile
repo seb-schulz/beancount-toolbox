@@ -1,5 +1,6 @@
 .PHONY: test
 test:
+	uv pip install -e '.[dev]'
 	uv run pytest -s
 
 .PHONY: watch

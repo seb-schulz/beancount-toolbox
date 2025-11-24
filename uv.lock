@@ -83,7 +83,6 @@ dependencies = [
     { name = "fava" },
     { name = "pydantic" },
     { name = "pyyaml" },
-    { name = "tatsu" },
 ]
 
 [package.optional-dependencies]
@@ -96,14 +95,13 @@ dev = [
 requires-dist = [
     { name = "beancount" },
     { name = "beancount-reds-plugins" },
-    { name = "beanquery", specifier = "<0.2.0" },
+    { name = "beanquery" },
     { name = "bottle", specifier = "<0.13" },
     { name = "fava" },
     { name = "pydantic" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pyyaml" },
     { name = "ruff", marker = "extra == 'dev'" },
-    { name = "tatsu", specifier = "<5.8.0" },
 ]
 provides-extras = ["dev"]
 
@@ -126,17 +124,17 @@ wheels = [
 
 [[package]]
 name = "beanquery"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beancount" },
     { name = "click" },
     { name = "python-dateutil" },
-    { name = "tatsu" },
+    { name = "tatsu-lts" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cd/04/8d9f3a48065fbf3f58826e8ea08bff35710ea8d542ed04654e87ec7b7b94/beanquery-0.1.0.tar.gz", hash = "sha256:b69e099b8421b219bbcc3293af77e3c4ccad7ab25bf520fee48788672ffbf64a", size = 91156, upload-time = "2024-11-05T21:46:09.168Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/90/801eec23a07072dcf8df061cb6f27be6045e08c12a90b287e872ce0a12d3/beanquery-0.2.0.tar.gz", hash = "sha256:2d72b50a39003435c7fed183666572b8ea878b9860499d0f196b38469384cd2c", size = 99399, upload-time = "2025-03-24T20:27:53.116Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/3a/ad59ba19801db326c44eac28a39cdd67221ccd2aa38575e2936c1f2b219d/beanquery-0.1.0-py3-none-any.whl", hash = "sha256:a52e4b9276fdeaacee7029daa445d79c854e9053572f5839ba2cc25e87796719", size = 98057, upload-time = "2024-11-05T21:46:07.692Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/b8/5b31f6047e50bc82f743760b4e0e7b42a9989c5b8986909c1309d65263ed/beanquery-0.2.0-py3-none-any.whl", hash = "sha256:980b7a328486d58cfd3e8fa98983fd501c33cf3a9be67f8b1e16c81e94018a3c", size = 108224, upload-time = "2025-03-24T20:27:51.728Z" },
 ]
 
 [[package]]
@@ -863,12 +861,12 @@ wheels = [
 ]
 
 [[package]]
-name = "tatsu"
-version = "5.7.4"
+name = "tatsu-lts"
+version = "5.13.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/f6/d53b45ea138e24199486e11deadedf06d0bedc9373911582b57a484f3d59/TatSu-5.7.4.zip", hash = "sha256:ebd8212323328115bc4967db9a40d7f15b627db4663290c64e5ef8fe71dca0ae", size = 205834, upload-time = "2022-07-29T21:21:39.992Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/62/55/8123c70881c58d0f01f48d869378717a101149491dd8e13cd908eb06a5a4/tatsu_lts-5.13.2.tar.gz", hash = "sha256:7204dbc3075fabecedd1ec1cbe04c5f20b159d7344f63280e580a21f3c14bf9f", size = 126316, upload-time = "2025-09-27T16:34:21.5Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/49/73a7124ac13b2272c7a309fcd4e65c412eefae5b4b60109fc17633948d97/TatSu-5.7.4-py2.py3-none-any.whl", hash = "sha256:f00c1a345a6510e25828323b7f205e5ae3993d6d97479921fd0ab33fde5631c4", size = 101488, upload-time = "2022-07-29T21:21:37.545Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/be/35d92814305e8a641341a519423b7f8da1075eeb7a2e492554a07619e819/tatsu_lts-5.13.2-py3-none-any.whl", hash = "sha256:6bf313f507a8f300340f09ff011f796399c46471031c657b5a90cc8e637dedf3", size = 79841, upload-time = "2025-09-27T16:34:20.026Z" },
 ]
 
 [[package]]

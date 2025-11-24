@@ -3,10 +3,11 @@ __plugins__ = ['documents']
 import os
 import typing
 from os import path
-import dateutil
-from beancount_toolbox import utils
 
+import dateutil
 from beancount.core import data, getters
+
+from beancount_toolbox import utils
 
 
 class DocumentError(typing.NamedTuple):
@@ -16,7 +17,7 @@ class DocumentError(typing.NamedTuple):
 
 
 def _basepath_from_config(options_map: typing.Mapping = {},
-                          config=None) -> os.PathLike:
+                          config: typing.Optional[str] = None) -> str:
     return utils.basepath_from_config(
         'documents',
         options_map,
@@ -24,7 +25,7 @@ def _basepath_from_config(options_map: typing.Mapping = {},
     )
 
 
-def documents(entries, options_map: typing.Mapping, config: str = None):
+def documents(entries, options_map: typing.Mapping, config: typing.Optional[str] = None):
     basepath = _basepath_from_config(options_map, config)
     existing_files = [
         path.join(root[len(basepath) + 1:], f)

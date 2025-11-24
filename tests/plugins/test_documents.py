@@ -1,11 +1,12 @@
+import datetime
 import os
 import unittest
-
 from os import path
+
 from beancount import loader
 from beancount.core import data
+
 from beancount_toolbox.plugins import documents
-import datetime
 from tests import _helper
 
 
@@ -22,7 +23,7 @@ class TestDocuments(unittest.TestCase):
             Assets:Other         -1.00 USD
         """
         self.assertEqual(0, len(errors))
-        entries, errors = documents.documents(entries, options_map, None)
+        entries, errors = documents.documents(entries, options_map)
 
         self.assertEqual(0, len(errors))
         self.assertEqual(3, len(entries))
@@ -56,7 +57,7 @@ class TestDocuments(unittest.TestCase):
             Assets:Other         -1.00 USD
         """
         self.assertEqual(0, len(errors))
-        entries, errors = documents.documents(entries, options_map, None)
+        entries, errors = documents.documents(entries, options_map)
 
         self.assertEqual(0, len(errors))
         self.assertEqual(5, len(entries))
@@ -73,7 +74,7 @@ class TestDocuments(unittest.TestCase):
             Assets:Other         -1.00 USD
         """
         self.assertEqual(0, len(errors))
-        entries, errors = documents.documents(entries, options_map, None)
+        entries, errors = documents.documents(entries, options_map)
 
         self.assertEqual(0, len(errors))
         self.assertEqual(5, len(entries))
@@ -86,7 +87,7 @@ class TestDocuments(unittest.TestCase):
           invoice: "invoice.pdf"
         """
         self.assertEqual(0, len(errors))
-        entries, errors = documents.documents(entries, options_map, None)
+        entries, errors = documents.documents(entries, options_map)
 
         self.assertEqual(0, len(errors))
         self.assertEqual(3, len(entries))

@@ -1,10 +1,11 @@
 import unittest
+from datetime import date
 
 from beancount import loader
-from beancount.parser import cmptest
 from beancount.core import amount
+from beancount.parser import cmptest
+
 from beancount_toolbox.plugins import spread_pad
-from datetime import date
 
 
 class CreatePads(cmptest.TestCase):

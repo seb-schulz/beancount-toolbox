@@ -1,47 +1,60 @@
 __plugins__ = ['spread_pad']
 
-from beancount.core import data, flags, realization, amount, inventory
-from beancount.utils import date_utils
-from datetime import date
-from beancount.utils import misc_utils
 from collections import namedtuple
+from datetime import date, timedelta
+from decimal import Decimal
+
+from beancount.core import amount, data, flags, inventory, realization
+from beancount.utils import misc_utils
 from fava.beans import abc
 
 SpreadPadError = namedtuple('SpreadPadError', 'source message entry')
 
 
-class CustomPad:
+def iter_dates(start_date, end_date):
+    """Yield all the dates between 'start_date' and 'end_date'.
 
-    def __init__(self, entry):
-        self._entry: abc.Custom = entry
+    Args:
+      start_date: An instance of datetime.date.
+      end_date: An instance of datetime.date.
+    Yields:
+      Instances of datetime.date.
+    """
+    oneday = timedelta(days=1)
+    date = start_date
+    while date < end_date:
+        yield date
+        date += oneday
+
+
+def CustomPad(entry: data.Custom):
+    return _CustomPad(
+        date=entry.date, type=entry.type,
+        meta=entry.meta, values=entry.values
+    )
+
+
+class _CustomPad(data.Custom):
 
     def __str__(self) -> str:
         from beancount.parser import printer
-        return printer.format_entry(self._entry)
-
-    @property
-    def meta(self):
-        return self._entry.meta
-
-    @property
-    def date(self):
-        return self._entry.date
+        return printer.format_entry(self)
 
     @property
     def account(self):
-        return self._entry.values[0].value
+        return self.values[0].value
 
     @property
     def source_account(self):
-        return self._entry.values[1].value
+        return self.values[1].value
 
     @property
     def total_amount(self):
-        return self._entry.values[2].value
+        return self.values[2].value
 
     def has_total_amount(self):
-        return len(self._entry.values
-                   ) > 2 and self._entry.values[2].dtype == amount.Amount
+        return len(self.values
+                   ) > 2 and self.values[2].dtype == amount.Amount
 
 
 def create_pads(
@@ -61,32 +74,39 @@ def create_pads(
     }[freq[-1]](freq[:-1])
 
     dates = [
-        dt for i, dt in enumerate(date_utils.iter_dates(start, end))
+        dt for i, dt in enumerate(iter_dates(start, end))
         if i % gap == gap - 1
     ]
     remains = amount.sub(expected_balance, current_balance)
 
-    if abs(remains.number) <= data.D('0.001'):
+    if remains.number is None:
+        raise ValueError(f"Number {remains} is none")
+
+    if abs(remains.number) <= Decimal('0.001'):
         raise ValueError(f"Cannot spread {remains}")
 
+    number = remains.number
     r = []
     for idx, current_date in enumerate(dates, start=1):
         amount_ = amount.Amount(
-            round(remains.number / (amount.D(len(dates) - idx + 1)), 2),
+            round(number / (Decimal(len(dates) - idx + 1)), 2),
             remains.currency,
         )
         remains = amount.sub(remains, amount_)
         narration = f"(Padding inserted for Balance of {expected_balance} for difference {amount_} [{idx} / {len(dates)}])"
-        r.append(
-            data.Transaction(
-                dict(**meta), current_date, flags.FLAG_PADDING, None,
-                narration, data.EMPTY_SET, data.EMPTY_SET, [
-                    data.create_simple_posting(None, account, amount_.number,
-                                               amount_.currency),
-                    data.create_simple_posting(None, source_account,
-                                               -amount_.number,
-                                               amount_.currency),
-                ]))
+
+        t = data.Transaction(
+            dict(**meta), current_date, flags.FLAG_PADDING, None,
+            narration, data.EMPTY_SET, data.EMPTY_SET, [])
+
+        number, currency = amount_.number, amount_.currency
+        if number is None:
+            raise ValueError(f"Number {remains} is none")
+
+        data.create_simple_posting(t, account, number, currency)
+        data.create_simple_posting(t, source_account, -number, currency)
+
+        r.append(t)
     return r
 
 
@@ -122,6 +142,8 @@ def spread_pad(entries, options_map):
             elif isinstance(
                     entry_or_txn_posting, data.Balance
             ) and eligable_pad is not None and account == eligable_pad.account:
+                if first_directive is None:
+                    raise ValueError("first directive must be Open or Balance")
                 try:
                     for e in create_pads(
                             first_directive.date,
@@ -129,10 +151,10 @@ def spread_pad(entries, options_map):
                             account_balance.get_currency_units(
                                 entry_or_txn_posting.amount.currency),
                             entry_or_txn_posting.amount,
-                            meta=eligable_pad.meta.copy(),
+                            meta=dict(**eligable_pad.meta),
                             account=eligable_pad.account,
                             source_account=eligable_pad.source_account,
-                            freq=eligable_pad.meta.get('frequency', '1d')):
+                            freq=str(eligable_pad.meta.get('frequency', '1d'))):
                         account_balance.add_position(e.postings[0])
                         additionals.append(e)
                 except ValueError as e:
