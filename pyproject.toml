@@ -1,6 +1,6 @@
 [project]
 name = "beancount-toolbox"
-version = "2.0.0a3"
+version = "2.0.0a4"
 requires-python = ">=3.12"
 maintainers = [{ name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com" }]
 dependencies = [
@@ -37,9 +37,9 @@ include = ["beancount_toolbox*"]
 
 [tool.setuptools.package-data]
 "beancount_toolbox" = [
-  "beancount_toolbox/ext/**/templates/*.html",
-  "beancount_toolbox/ext/**/*.js",
-  "beancount_toolbox/data/**",
+  "ext/**/templates/*.html",
+  "ext/**/*.js",
+  "data/**",
 ]
 
 [build-system]
