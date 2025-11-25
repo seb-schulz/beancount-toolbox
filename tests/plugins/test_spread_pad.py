@@ -406,6 +406,84 @@ class SpreadPadOnly(cmptest.TestCase):
         2011-01-04 balance Assets:Cash   1.00 EUR
         ''', entires)
 
+    @loader.load_doc(expect_errors=False)
+    def test_spread_pad_regression_v2_to_v3(self, entires, errors,
+                                            options_map):
+        """
+          plugin "beancount.plugins.auto_accounts"
+          plugin "beancount_toolbox.plugins.spread_pad"
+
+          2021-02-07 open Assets:Cash
+          2011-01-01 open Expenses:Misc
+
+          2021-02-07 * "Something"
+            Expenses:Misc -93.54 EUR
+            Assets:Cash 93.54 EUR
+
+          2021-02-08 * "Shop I"
+            Assets:Cash -25 EUR
+            Expenses:Misc 25 EUR
+
+          2021-02-13 * "Shop II"
+            Assets:Cash -7.39 EUR
+            Expenses:Misc 7.39 EUR
+
+          2021-02-08 balance Assets:Cash  93.54 EUR
+          2021-02-11 custom "pad" Assets:Cash Expenses:Misc -17.38 EUR
+          2021-02-14 balance Assets:Cash  43.77 EUR
+          # 2021-02-14 balance Assets:Cash  61.15 EUR
+        """
+        # self.assertEqual(0, len(errors))
+        # self.assertEqual(10, len(entires))
+        self.assertEqualEntries(
+            r'''
+            2021-02-07 open Assets:Cash
+            2011-01-01 open Expenses:Misc
+
+            2021-02-07 * "Something"
+              Expenses:Misc -93.54 EUR
+              Assets:Cash 93.54 EUR
+
+            2021-02-08 * "Shop I"
+              Assets:Cash -25 EUR
+              Expenses:Misc 25 EUR
+
+            2021-02-13 * "Shop II"
+              Assets:Cash -7.39 EUR
+              Expenses:Misc 7.39 EUR
+
+            2021-02-08 balance Assets:Cash  93.54 EUR
+
+            2021-02-08 P "(Padding inserted for Balance of 43.77 EUR for difference -2.90 EUR [1 / 6])"
+              Assets:Cash    -2.90 EUR
+              Expenses:Misc   2.90 EUR
+
+            2021-02-09 P "(Padding inserted for Balance of 43.77 EUR for difference -2.90 EUR [2 / 6])"
+              Assets:Cash    -2.90 EUR
+              Expenses:Misc   2.90 EUR
+
+            2021-02-10 P "(Padding inserted for Balance of 43.77 EUR for difference -2.90 EUR [3 / 6])"
+              Assets:Cash    -2.90 EUR
+              Expenses:Misc   2.90 EUR
+
+            2021-02-11 P "(Padding inserted for Balance of 43.77 EUR for difference -2.89 EUR [4 / 6])"
+              Assets:Cash    -2.89 EUR
+              Expenses:Misc   2.89 EUR
+
+            2021-02-12 P "(Padding inserted for Balance of 43.77 EUR for difference -2.90 EUR [5 / 6])"
+              Assets:Cash    -2.90 EUR
+              Expenses:Misc   2.90 EUR
+
+            2021-02-13 P "(Padding inserted for Balance of 43.77 EUR for difference -2.89 EUR [6 / 6])"
+              Assets:Cash    -2.89 EUR
+              Expenses:Misc   2.89 EUR
+
+            2021-02-11 custom "pad" Assets:Cash Expenses:Misc -17.38 EUR
+
+            2021-02-14 balance Assets:Cash  43.77 EUR
+            # 2021-02-14 balance Assets:Cash  61.15 EUR
+        ''', entires)
+
 
 if __name__ == '__main__':
     unittest.main()

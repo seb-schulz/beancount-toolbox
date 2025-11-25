@@ -26,34 +26,37 @@ def iter_dates(start_date, end_date):
         date += oneday
 
 
-def CustomPad(entry: data.Custom):
-    return _CustomPad(
-        date=entry.date, type=entry.type,
-        meta=entry.meta, values=entry.values
-    )
-
-
-class _CustomPad(data.Custom):
+class CustomPad:
+    def __init__(self, entry):
+        self._entry = entry
 
     def __str__(self) -> str:
         from beancount.parser import printer
-        return printer.format_entry(self)
+        return printer.format_entry(self._entry)
+
+    @property
+    def meta(self):
+        return self._entry.meta
+
+    @property
+    def date(self):
+        return self._entry.date
 
     @property
     def account(self):
-        return self.values[0].value
+        return self._entry.values[0].value
 
     @property
     def source_account(self):
-        return self.values[1].value
+        return self._entry.values[1].value
 
     @property
     def total_amount(self):
-        return self.values[2].value
+        return self._entry.values[2].value
 
     def has_total_amount(self):
-        return len(self.values
-                   ) > 2 and self.values[2].dtype == amount.Amount
+        return len(self._entry.values
+                   ) > 2 and self._entry.values[2].dtype == amount.Amount
 
 
 def create_pads(
