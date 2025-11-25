@@ -1,0 +1,12 @@
+{
+  "configurations": [
+    {
+      "name": "Python Debugger: Module",
+      "type": "debugpy",
+      "request": "launch",
+      "python": ".venv/bin/python3",
+      "module": "fava.cli",
+      "args": ["-p", "5001", "tests/fixtures/example/start.bean"]
+    }
+  ]
+}
