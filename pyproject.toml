@@ -22,7 +22,6 @@ dev = [
 bean-check = "beancount.scripts.check:main"
 bean-format = "beancount.scripts.format:main"
 bean-query = "beanquery.shell:main"
-bean-export = "beancount_toolbox.cli.export:main"
 fava = "fava.cli:main"
 
 [tool.pytest.ini_options]
