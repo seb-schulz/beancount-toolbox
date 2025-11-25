@@ -4,15 +4,15 @@ version = "2.0.0a5"
 requires-python = ">=3.12"
 maintainers = [{ name = "Sebastian Schulz", email = "16666034+seb-schulz@users.noreply.github.com" }]
 dependencies = [
-    "beancount",
-    "beancount-reds-plugins",
-    "pyyaml",
-    "pydantic",
-    "fava",
-    "bottle<0.13",
-    "beanquery",
+    "beancount==3.2.0",
+    "beancount-reds-plugins==0.4.0",
+    "pyyaml==6.0.3",
+    "pydantic==2.12.4",
+    "fava==1.30.7",
+    "bottle==0.12.25,<0.13",
+    "beanquery==0.2.0",
 ]
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
   "pytest",
   "ruff",

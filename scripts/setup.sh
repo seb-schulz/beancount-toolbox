@@ -3,7 +3,7 @@
 set -xeu
 
 rootdir=$(realpath "$(dirname "$0")/..")
-uv sync --directory "${rootdir}"
+uv sync --directory "${rootdir}" --group dev
 npm ci || true
 
 curl -fsSL https://claude.ai/install.sh | bash

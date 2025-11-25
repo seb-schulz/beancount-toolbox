@@ -6,7 +6,7 @@
     {
       "label": "fava example",
       "type": "shell",
-      "command": "fava --debug tests/fixtures/example/start.bean"
+      "command": "uv run fava --debug tests/fixtures/example/start.bean"
     }
   ]
 }

@@ -85,7 +85,7 @@ dependencies = [
     { name = "pyyaml" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
@@ -93,17 +93,20 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "beancount" },
-    { name = "beancount-reds-plugins" },
-    { name = "beanquery" },
-    { name = "bottle", specifier = "<0.13" },
-    { name = "fava" },
-    { name = "pydantic" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pyyaml" },
-    { name = "ruff", marker = "extra == 'dev'" },
+    { name = "beancount", specifier = "==3.2.0" },
+    { name = "beancount-reds-plugins", specifier = "==0.4.0" },
+    { name = "beanquery", specifier = "==0.2.0" },
+    { name = "bottle", specifier = "==0.12.25,<0.13" },
+    { name = "fava", specifier = "==1.30.7" },
+    { name = "pydantic", specifier = "==2.12.4" },
+    { name = "pyyaml", specifier = "==6.0.3" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
 
 [[package]]
 name = "beangulp"
