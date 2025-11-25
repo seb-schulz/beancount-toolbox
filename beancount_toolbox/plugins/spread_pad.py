@@ -88,6 +88,9 @@ def create_pads(
     number = remains.number
     r = []
     for idx, current_date in enumerate(dates, start=1):
+        if number is None:
+            raise ValueError(f"Number {remains} is none")
+
         amount_ = amount.Amount(
             round(number / (Decimal(len(dates) - idx + 1)), 2),
             remains.currency,
@@ -99,13 +102,15 @@ def create_pads(
             dict(**meta), current_date, flags.FLAG_PADDING, None,
             narration, data.EMPTY_SET, data.EMPTY_SET, [])
 
-        number, currency = amount_.number, amount_.currency
-        if number is None:
-            raise ValueError(f"Number {remains} is none")
+        if amount_.number is None:
+            raise ValueError(f"Number {amount_} is none")
 
-        data.create_simple_posting(t, account, number, currency)
-        data.create_simple_posting(t, source_account, -number, currency)
+        data.create_simple_posting(
+            t, account, amount_.number, amount_.currency)
+        data.create_simple_posting(
+            t, source_account, -amount_.number, amount_.currency)
 
+        number = remains.number
         r.append(t)
     return r
 
