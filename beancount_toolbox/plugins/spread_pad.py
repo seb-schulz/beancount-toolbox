@@ -72,13 +72,12 @@ class CustomPad:
     def source_account(self):
         return self._entry.values[1].value
 
-    @property
-    def total_amount(self):
-        return self._entry.values[2].value
 
-    def has_total_amount(self):
-        return len(self._entry.values
-                   ) > 2 and self._entry.values[2].dtype == amount.Amount
+PadPeriod = namedtuple('PadPeriod', [
+    'start_directive',   # data.Open or data.Balance (period start)
+    'pad_directive',     # CustomPad instance
+    'end_balance',       # data.Balance (period end)
+])
 
 
 def create_pads(
@@ -91,10 +90,9 @@ def create_pads(
     account: data.Account,
     source_account: data.Account,
     freq: str = '1d',
-    final_balance: amount.Amount | None = None,
 ):
-    # Use final_balance for narration if provided, otherwise use expected_balance
-    narration_balance = final_balance if final_balance is not None else expected_balance
+    # Always use expected_balance for narration
+    narration_balance = expected_balance
     gap = {
         'd': lambda x: int(x),
         'w': lambda x: int(x) * 7,
@@ -149,79 +147,131 @@ def create_pads(
     return r
 
 
+def process_account_entries(
+    account: str,
+    entries_for_account: list,
+    errors: list,
+) -> list[data.Transaction]:
+    """Process entries for one account and generate padding transactions.
+
+    State machine per account:
+        [Open/Balance] → [custom "pad"] → [Balance]
+         ^period_start    ^pending          ^trigger
+
+    Padding is calculated based only on the difference between:
+    - current_balance (from account_balance tracking)
+    - expected_balance (from the end Balance directive)
+
+    Args:
+        account: Account name being processed
+        entries_for_account: Chronological entries for this account
+        errors: List to append SpreadPadError instances
+
+    Returns:
+        List of generated padding Transaction entries
+    """
+    account_balance = inventory.Inventory()
+    period_start_directive = None
+    pending_pad = None
+    padding_transactions = []
+
+    for entry_or_txn_posting in entries_for_account:
+        # Branch 1: Custom "pad" directive
+        if isinstance(entry_or_txn_posting, data.Custom) and entry_or_txn_posting.type == 'pad':
+            pending_pad = CustomPad(entry_or_txn_posting)
+
+        # Branch 2: Open directive (potential period start)
+        elif isinstance(entry_or_txn_posting, data.Open):
+            period_start_directive = entry_or_txn_posting
+
+        # Branch 3: Transaction posting (update balance)
+        elif isinstance(entry_or_txn_posting, data.TxnPosting):
+            account_balance.add_position(entry_or_txn_posting.posting)
+
+        # Branch 4: Balance without pending pad (potential period start)
+        elif isinstance(entry_or_txn_posting, data.Balance) and pending_pad is None:
+            period_start_directive = entry_or_txn_posting
+
+        # Branch 5: Balance with pending pad (TRIGGER - generate padding)
+        elif isinstance(entry_or_txn_posting, data.Balance) and pending_pad is not None and account == pending_pad.account:
+            if period_start_directive is None:
+                raise ValueError("period_start_directive must be Open or Balance")
+
+            # Calculate padding based only on balance difference
+            current_balance = account_balance.get_currency_units(
+                entry_or_txn_posting.amount.currency)
+            expected_balance = entry_or_txn_posting.amount
+
+            # Generate padding entries
+            try:
+                generated_pads = create_pads(
+                    period_start_directive.date,
+                    entry_or_txn_posting.date,
+                    current_balance,
+                    expected_balance,
+                    meta=dict(**pending_pad.meta),
+                    account=pending_pad.account,
+                    source_account=pending_pad.source_account,
+                    freq=str(pending_pad.meta.get('frequency', '1d')),
+                )
+
+                # Update balance and collect entries
+                for pad_entry in generated_pads:
+                    account_balance.add_position(pad_entry.postings[0])
+                    padding_transactions.append(pad_entry)
+
+            except ValueError as e:
+                errors.append(
+                    SpreadPadError(pending_pad.meta, e, entry_or_txn_posting)
+                )
+
+            # Reset state for next period
+            period_start_directive = entry_or_txn_posting
+            pending_pad = None
+
+    return padding_transactions
+
+
 def spread_pad(entries, options_map):
+    """Spread padding entries across multiple days between balance directives.
+
+    This plugin processes custom "pad" directives between two balance directives.
+    The "two balance directive" constraint is enforced per account:
+    - Balance/Open marks period start
+    - Custom "pad" marks pending padding
+    - Next Balance triggers padding generation
+
+    Padding is calculated based only on the difference between the current
+    account balance and the expected balance from the Balance directive.
+
+    Args:
+        entries: List of beancount entries
+        options_map: Beancount options
+
+    Returns:
+        Tuple of (entries with padding added, list of errors)
+    """
     errors = []
-    # Find all the pad entries and group them by account.
-    pad = [
+
+    # Find all custom "pad" entries, grouped by account
+    custom_pads = [
         CustomPad(e) for e in misc_utils.filter_type(entries, data.Custom)
         if e.type == 'pad'
     ]
-    pad_dict = misc_utils.groupby(lambda x: x.account, pad)
+    pad_accounts = misc_utils.groupby(lambda x: x.account, custom_pads)
 
-    # Partially realize the postings, so we can iterate them by account.
+    # Get entries organized by account (chronologically)
     by_account = realization.postings_by_account(entries)
 
-    additionals = []
-    for account in pad_dict.keys() & by_account.keys():
-        account_balance = inventory.Inventory()
-        first_directive = None
-        eligable_pad = None
+    # Process each account that has custom pads
+    all_padding_transactions = []
+    for account in pad_accounts.keys() & by_account.keys():
+        padding_transactions = process_account_entries(
+            account,
+            by_account[account],
+            errors,
+        )
+        all_padding_transactions.extend(padding_transactions)
 
-        for entry_or_txn_posting in by_account[account]:
-            if isinstance(entry_or_txn_posting,
-                          data.Custom) and entry_or_txn_posting.type == 'pad':
-                eligable_pad = CustomPad(entry_or_txn_posting)
-            elif isinstance(entry_or_txn_posting, data.Open):
-                first_directive = entry_or_txn_posting
-            elif isinstance(entry_or_txn_posting, data.TxnPosting):
-                account_balance.add_position(entry_or_txn_posting.posting)
-            elif isinstance(entry_or_txn_posting,
-                            data.Balance) and eligable_pad is None:
-                first_directive = entry_or_txn_posting
-            elif isinstance(
-                    entry_or_txn_posting, data.Balance
-            ) and eligable_pad is not None and account == eligable_pad.account:
-                if first_directive is None:
-                    raise ValueError("first directive must be Open or Balance")
-
-                # Determine the correct balance parameters
-                if eligable_pad.has_total_amount():
-                    # When explicit amount provided, use previous balance + explicit amount
-                    pad_amount = eligable_pad.total_amount
-                    # Use the previous balance assertion as the starting point
-                    if isinstance(first_directive, data.Balance):
-                        current_balance = first_directive.amount
-                    else:
-                        # If first_directive is Open, calculate from account_balance
-                        current_balance = account_balance.get_currency_units(pad_amount.currency)
-                    expected_balance = amount.add(current_balance, pad_amount)
-                else:
-                    # When no explicit amount, calculate from balance assertion
-                    current_balance = account_balance.get_currency_units(
-                        entry_or_txn_posting.amount.currency)
-                    expected_balance = entry_or_txn_posting.amount
-
-                # Pass final_balance for narration when using explicit amount
-                final_balance_param = entry_or_txn_posting.amount if eligable_pad.has_total_amount() else None
-
-                try:
-                    for e in create_pads(
-                            first_directive.date,
-                            entry_or_txn_posting.date,
-                            current_balance,
-                            expected_balance,
-                            meta=dict(**eligable_pad.meta),
-                            account=eligable_pad.account,
-                            source_account=eligable_pad.source_account,
-                            freq=str(eligable_pad.meta.get('frequency', '1d')),
-                            final_balance=final_balance_param):
-                        account_balance.add_position(e.postings[0])
-                        additionals.append(e)
-                except ValueError as e:
-                    errors.append(
-                        SpreadPadError(eligable_pad.meta, e,
-                                       entry_or_txn_posting))
-                first_directive = entry_or_txn_posting
-                eligable_pad = None
-
-    return data.sorted(entries + additionals), errors
+    # Merge and sort all entries
+    return data.sorted(entries + all_padding_transactions), errors

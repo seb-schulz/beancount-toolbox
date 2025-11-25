@@ -440,7 +440,7 @@ class SpreadPadOnly(cmptest.TestCase):
             Equity:PrivateWithdrawals:B  -100.00 EUR
             Assets:Cash     200.00 EUR
 
-          2021-02-11 custom "pad" Assets:Cash Expenses:Misc -17.38 EUR
+          2021-02-11 custom "pad" Assets:Cash Expenses:Misc
           # 2021-02-11 pad Assets:Cash Expenses:Misc
 
           2021-02-10 * "Expensens"
@@ -515,7 +515,7 @@ class SpreadPadOnly(cmptest.TestCase):
               Assets:Cash    -2.88 EUR
               Expenses:Misc   2.88 EUR
 
-            2021-02-11 custom "pad" Assets:Cash Expenses:Misc -17.38 EUR
+            2021-02-11 custom "pad" Assets:Cash Expenses:Misc
 
             2021-02-10 * "Expensens"
               Assets:Cash     -55.00 EUR
@@ -543,22 +543,15 @@ class SpreadPadOnly(cmptest.TestCase):
     def test_spread_pad_default_plugin_order_issue(self, entires, errors,
                                                    options_map):
         """
-          ; This test demonstrates behavior with DEFAULT plugin order
-          ; Without option "plugin_processing_mode" "raw" and explicit
-          ; plugin ordering, the spread_pad plugin starts padding from
-          ; the SAME day as the balance assertion (not the next day).
-          ;
-          ; This differs from production which uses:
-          ;   option "plugin_processing_mode" "raw"
-          ;   plugin "beancount.ops.pad"
-          ;   plugin "beancount_toolbox.plugins.spread_pad"
-          ;   plugin "beancount.ops.balance"
-          ;
-          ; With default order, padding starts on 2021-02-08 (balance date)
-          ; instead of 2021-02-09 (day after balance).
+          ; This test demonstrates behavior once the recommended plugin order
+          ; is applied.
+
+          option "plugin_processing_mode" "raw"
 
           plugin "beancount.plugins.auto_accounts"
+          plugin "beancount.ops.pad"
           plugin "beancount_toolbox.plugins.spread_pad"
+          plugin "beancount.ops.balance"
 
           2021-02-06 open Assets:Cash
           2021-02-06 open Expenses:Misc
@@ -571,7 +564,7 @@ class SpreadPadOnly(cmptest.TestCase):
 
           2021-02-08 balance Assets:Cash 100.00 EUR
 
-          2021-02-08 custom "pad" Assets:Cash Expenses:Misc -30.00 EUR
+          2021-02-08 custom "pad" Assets:Cash Expenses:Misc
 
           2021-02-11 balance Assets:Cash 70.00 EUR
         """
@@ -604,75 +597,9 @@ class SpreadPadOnly(cmptest.TestCase):
               Assets:Cash    -10.00 EUR
               Expenses:Misc   10.00 EUR
 
-            2021-02-08 custom "pad" Assets:Cash Expenses:Misc -30.00 EUR
+            2021-02-08 custom "pad" Assets:Cash Expenses:Misc
 
             2021-02-11 balance Assets:Cash 70.00 EUR
-        ''', entires)
-
-    @loader.load_doc(expect_errors=True)
-    def test_spread_pad_explicit_amount_different_from_calculated(self, entires, errors,
-                                                                  options_map):
-        """
-          ; Test that explicit amount in custom pad directive is used
-          ; even when it differs from the calculated amount.
-          ;
-          ; Calculated amount would be: 80.00 - 100.00 = -20.00 EUR
-          ; But explicit amount is: -40.00 EUR
-          ; The plugin should use -40.00 EUR and spread it across 3 days,
-          ; resulting in a balance of 60.00 EUR (100 - 40).
-          ; This causes the balance assertion to fail, which is expected.
-
-          plugin "beancount.plugins.auto_accounts"
-          plugin "beancount_toolbox.plugins.spread_pad"
-
-          2021-02-06 open Assets:Cash
-          2021-02-06 open Expenses:Misc
-
-          2021-02-06 * "Initial"
-            Assets:Cash 100.00 EUR
-            Expenses:Misc -100.00 EUR
-
-          2021-02-07 balance Assets:Cash 100.00 EUR
-
-          2021-02-08 custom "pad" Assets:Cash Expenses:Misc -40.00 EUR
-
-          2021-02-11 balance Assets:Cash 80.00 EUR
-        """
-        # Verify that the explicit amount was used (-40.00 EUR spread across 4 days)
-        # even though it causes a balance error
-        self.assertEqual(1, len(errors))  # Expect balance error
-        self.assertRegex(str(errors[0]), "Balance.*80.00 EUR.*60.00 EUR")
-
-        self.assertEqualEntries(
-            r'''
-            2021-02-06 open Assets:Cash
-            2021-02-06 open Expenses:Misc
-
-            2021-02-06 * "Initial"
-              Assets:Cash 100.00 EUR
-              Expenses:Misc -100.00 EUR
-
-            2021-02-07 balance Assets:Cash 100.00 EUR
-
-            2021-02-07 P "(Padding inserted for Balance of 80.00 EUR for difference -10.00 EUR [1 / 4])"
-              Assets:Cash    -10.00 EUR
-              Expenses:Misc   10.00 EUR
-
-            2021-02-08 P "(Padding inserted for Balance of 80.00 EUR for difference -10.00 EUR [2 / 4])"
-              Assets:Cash    -10.00 EUR
-              Expenses:Misc   10.00 EUR
-
-            2021-02-09 P "(Padding inserted for Balance of 80.00 EUR for difference -10.00 EUR [3 / 4])"
-              Assets:Cash    -10.00 EUR
-              Expenses:Misc   10.00 EUR
-
-            2021-02-10 P "(Padding inserted for Balance of 80.00 EUR for difference -10.00 EUR [4 / 4])"
-              Assets:Cash    -10.00 EUR
-              Expenses:Misc   10.00 EUR
-
-            2021-02-08 custom "pad" Assets:Cash Expenses:Misc -40.00 EUR
-
-            2021-02-11 balance Assets:Cash 80.00 EUR
         ''', entires)
 
 
