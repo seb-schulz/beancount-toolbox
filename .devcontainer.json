@@ -12,14 +12,23 @@
       "settings": {
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.terminal.activateEnvironment": true,
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/venv/bin/python",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
         }
       },
-      "extensions": ["redhat.vscode-yaml", "Lencerf.beancount"]
+      "extensions": [
+        "redhat.vscode-yaml",
+        "Lencerf.beancount",
+        "openai.chatgpt",
+        "anthropic.claude-code"
+      ]
     }
   },
+  "mounts": [
+    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
   "runArgs": ["--userns=keep-id"],
   "containerUser": "vscode",
   // "onCreateCommand": "pipx install pip-tools ruff isort",
