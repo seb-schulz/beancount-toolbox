@@ -6,7 +6,6 @@ from decimal import Decimal
 
 from beancount.core import amount, data, flags, inventory, realization
 from beancount.utils import misc_utils
-from fava.beans import abc
 
 SpreadPadError = namedtuple('SpreadPadError', 'source message entry')
 
