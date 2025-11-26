@@ -6655,8 +6655,11 @@ option "operating_currency" "USD"
 * Cash
 
 
-; 2020-09-20 custom "fava-extension" "fava.ext.fava_ext_test"
+2020-09-20 custom "fava-extension" "fava.ext.fava_ext_test" "[
+  ('account_name_pattern', 'Assets:US:ETrade.*')
+]"
 2020-09-20 custom "fava-extension" "beancount_toolbox.ext.budget_plan"
+2020-09-20 custom "fava-extension" "beancount_toolbox.ext.portfolio_monitor" "{'root_account': 'Assets:US'}"
 
 2024-01-01 custom "budget" Expenses:Financial:Commissions "yearly" 9,690.00 USD
 2024-01-01 custom "budget" Expenses:Financial:Fees "yearly" 225.00 USD
