@@ -33,12 +33,6 @@ class _Amount(typing.NamedTuple):
     currency: str
 
 
-class _CustomWeight(typing.NamedTuple):
-    account: str
-    bucket: str
-    weight: Decimal
-
-
 @dataclass(frozen=True)
 class Portfolio:
     """A portfolio.
