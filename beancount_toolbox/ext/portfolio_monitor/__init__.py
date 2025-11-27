@@ -9,6 +9,8 @@ from fava.beans import protocols
 from fava.context import g
 from fava.core import charts, conversion, inventory, query, tree
 
+from .weight_allocation import weight_list
+
 if typing.TYPE_CHECKING:  # pragma: no cover
     from flask.wrappers import Response
 
@@ -16,6 +18,12 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 class _Amount(typing.NamedTuple):
     number: Decimal
     currency: str
+
+
+class _CustomWeight(typing.NamedTuple):
+    account: str
+    bucket: str
+    weight: Decimal
 
 
 @dataclass(frozen=True)
@@ -95,22 +103,14 @@ class Row:
         return inv
 
 
-def weight_list(root_node: tree.TreeNode, root_weight: Decimal = Decimal(1)) -> typing.Dict[str, Decimal]:
-    if len(root_node.children) == 0:
-        return {root_node.name: root_weight}
-
-    return {acc: w
-            for node in root_node.children
-            for acc, w in weight_list(node, root_weight / Decimal(len(root_node.children))).items()}
-
-
 def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     """Get an account tree based on matching regex patterns."""
     tree = g.filtered.root_tree
-    root_account = config.get('root_account', g.ledger.options["name_assets"])
+    ledger = g.filtered.ledger
+    root_account = config.get('root_account', ledger.options["name_assets"])
 
     root_node = None
-    assets = g.ledger.options["name_assets"]
+    assets = ledger.options["name_assets"]
     for account, node in tree.items():
         if account == root_account and account_types.is_account_type(assets, account):
             root_node = node
@@ -118,27 +118,58 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     if root_node is None:
         raise ValueError("root node not found")
 
-    weights = weight_list(root_node)
+    # Build map of which accounts have weight directives
+    accounts_with_weights = set()
+    for x in ledger.all_entries_by_type.Custom:
+        if x.type == 'portfolio-weight':
+            accounts_with_weights.add(x.values[0].value)
 
-    default_currency = g.ledger.options["operating_currency"][0]
+    # Parse directives with automatic bucket inference
+    weight_entries = {}
+    for x in ledger.all_entries_by_type.Custom:
+        if x.type != 'portfolio-weight':
+            continue
+
+        account = x.values[0].value
+
+        # Determine bucket
+        if len(x.values) >= 3:
+            # Explicit bucket provided
+            bucket = x.values[2].value
+        else:
+            # No explicit bucket - find closest ancestor with directive
+            bucket = root_account  # Default
+            parts = account.split(':')
+            for i in range(len(parts) - 1, 0, -1):
+                ancestor = ':'.join(parts[:i])
+                if ancestor in accounts_with_weights:
+                    bucket = ancestor
+                    break
+
+        weight_entries.setdefault(bucket, {})
+        weight_entries[bucket][account] = x.values[1].value
+
+    weights = weight_list(root_node, weight_entries)
+
+    default_currency = ledger.options["operating_currency"][0]
     account_balances: list[Row] = []
     total = Decimal()
 
     account_currencies = {
-        x.account: x.currencies for x in g.ledger.all_entries_by_type.Open}
+        x.account: x.currencies for x in ledger.all_entries_by_type.Open}
 
     for account, node in tree.items():
         if account not in weights:
             continue
 
-        currency = account_currencies[node.name][0]
-        price_per_unit = g.ledger.prices.get_price(
+        currency = account_currencies[account][0]
+        price_per_unit = ledger.prices.get_price(
             (currency, default_currency), g.filtered.end_date) if len(account_currencies[node.name]) > 0 else None
 
         account_balances.append(Row(
             account=node.name,
             balance=node.balance,
-            weight=weights[node.name],
+            weight=weights[account],
             price_per_unit=price_per_unit,
             currency=currency,
         ))
