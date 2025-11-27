@@ -170,6 +170,12 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
         if account not in weights:
             continue
 
+        if account not in account_currencies:
+            raise ValueError(
+                f"Account '{account}' has no Open directive. "
+                f"Please add: YYYY-MM-DD open {account} <CURRENCY>"
+            )
+
         currency = account_currencies[account][0]
         price_per_unit = None
         price_date = None
