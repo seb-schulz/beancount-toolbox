@@ -174,26 +174,49 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         account_currencies = {
             x.account: x.currencies for x in ledger.all_entries_by_type.Open}
 
-        closedAccounts = frozenset([
+        closed_accounts = frozenset([
             x.account
             for x in ledger.all_entries_by_type.Close
             if (g.filtered.end_date is None) or (g.filtered.end_date is not None and x.date <= g.filtered.end_date)
         ])
 
-        excludedAccounts = frozenset([
+        excluded_accounts = frozenset([
             x.values[0].value
             for x in ledger.all_entries_by_type.Custom
             if x.type == 'portfolio-exclude'
             and ((g.filtered.end_date is None) or (x.date <= g.filtered.end_date))
         ])
 
-        skippedAccounts = closedAccounts | excludedAccounts
+        skipped_accounts = closed_accounts | excluded_accounts
+
+        # Determine which weighted accounts are actually investable (open and not excluded)
+        included_accounts = {
+            account for account in weights.keys() if account not in skipped_accounts
+        }
+
+        if not included_accounts:
+            # Nothing to show – return empty portfolio with zero total
+            return Portfolio(
+                _Amount(Decimal(0), default_currency),
+                query.QueryResultTable(TABLE_HEADER, []),
+            )
+
+        # Renormalize target weights over included accounts so that Target Allocation
+        # sums to 100% for the accounts shown in the report.
+        total_base_weight = sum(weights[account] for account in included_accounts)
+
+        if total_base_weight > 0:
+            effective_weights = {
+                account: weights[account] / total_base_weight
+                for account in included_accounts
+            }
+        else:
+            # Fallback: distribute equally if all base weights are zero
+            share = Decimal(1) / Decimal(len(included_accounts))
+            effective_weights = {account: share for account in included_accounts}
 
         for account, node in tree.items():
-            if account in skippedAccounts:
-                continue
-
-            if account not in weights:
+            if account not in included_accounts:
                 continue
 
             if account not in account_currencies or not account_currencies[account]:
@@ -214,7 +237,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
             account_balances.append(Row(
                 account=node.name,
                 balance=node.balance,
-                weight=weights[account],
+                weight=effective_weights[account],
                 price_per_unit=price_per_unit,
                 price_date=price_date,
                 currency=currency,
