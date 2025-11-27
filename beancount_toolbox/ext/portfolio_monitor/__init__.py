@@ -10,6 +10,8 @@ from fava.context import g
 from fava.core import charts, conversion, inventory, query, tree
 
 from .weight_allocation import weight_list
+from .weight_conversion import convert_amounts_to_percentages
+from .weight_parsing import parse_weight_directives
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     from flask.wrappers import Response
@@ -45,95 +47,6 @@ class Portfolio:
     """
     total: protocols.Amount
     table: query.QueryResultTable
-
-
-def calculate_bucket_total(
-    bucket: str,
-    account_map: typing.Dict[str, tree.TreeNode],
-    default_currency: str,
-    ledger: typing.Any
-) -> Decimal:
-    """Calculate total value of a bucket in default currency.
-
-    Args:
-        bucket: The bucket account name
-        account_map: Dict mapping account names to TreeNode objects
-        default_currency: The operating currency
-        ledger: The ledger object for price lookups
-
-    Returns:
-        Total value of bucket in default currency
-    """
-    if bucket not in account_map:
-        raise ValueError(f"Bucket '{bucket}' not found in account tree")
-
-    node = account_map[bucket]
-    balance = node.balance_children
-
-    # Convert to default currency using market prices
-    simple_balance = balance.reduce(
-        lambda p: conversion.get_market_value(
-            p, ledger.prices, g.filtered.end_date)
-    )
-
-    return simple_balance.get(default_currency, Decimal(0))
-
-
-def convert_amounts_to_percentages(
-    weight_entries: typing.Dict[str, typing.Dict[str, Decimal | tuple]],
-    account_map: typing.Dict[str, tree.TreeNode],
-    default_currency: str,
-    ledger: typing.Any
-) -> typing.Dict[str, typing.Dict[str, Decimal]]:
-    """Convert absolute amount weights to percentage weights.
-
-    Args:
-        weight_entries: Weights with mixed types (Decimal percentages or (amount, currency) tuples)
-        account_map: Dict mapping account names to TreeNode objects
-        default_currency: The operating currency
-        ledger: The ledger object for price lookups
-
-    Returns:
-        Weight entries with all values converted to Decimal percentages
-
-    Raises:
-        ValueError: If absolute amount exceeds bucket total
-    """
-    converted = {}
-
-    for bucket, weights in weight_entries.items():
-        # Calculate bucket total once per bucket
-        bucket_total = calculate_bucket_total(
-            bucket, account_map, default_currency, ledger)
-
-        converted[bucket] = {}
-
-        for account, weight in weights.items():
-            if isinstance(weight, tuple):
-                # It's an absolute amount - convert to percentage
-                amount, currency = weight
-
-                if bucket_total == 0:
-                    raise ValueError(
-                        f"Cannot convert absolute amount for '{account}': "
-                        f"bucket '{bucket}' has zero total value"
-                    )
-
-                percentage = amount / bucket_total
-
-                if percentage > 1:
-                    raise ValueError(
-                        f"Absolute amount {amount} {currency} for '{account}' "
-                        f"exceeds bucket '{bucket}' total of {bucket_total} {default_currency} "
-                        f"(would be {percentage * 100:.2f}%)"
-                    )
-
-                converted[bucket][account] = percentage
-            else:
-                # It's already a percentage - keep as is
-                converted[bucket][account] = weight
-
-    return converted
 
 
 def to_pct(val: Decimal | None) -> inventory.SimpleCounterInventory:
@@ -222,55 +135,13 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     if root_node.balance_children.is_empty():
         return Portfolio(_Amount(Decimal(0), default_currency), query.QueryResultTable(TABLE_HEADER, []))
 
-    # Build map of which accounts have weight directives
-    accounts_with_weights = set()
-    for x in ledger.all_entries_by_type.Custom:
-        if x.type == 'portfolio-weight':
-            # Only consider directives on or before end_date
-            if g.filtered.end_date and x.date > g.filtered.end_date:
-                continue
-            accounts_with_weights.add(x.values[0].value)
-
-    # Parse directives with automatic bucket inference
-    weight_entries = {}
-    for x in ledger.all_entries_by_type.Custom:
-        if x.type != 'portfolio-weight':
-            continue
-
-        # Only consider directives on or before end_date
-        if g.filtered.end_date and x.date > g.filtered.end_date:
-            continue
-
-        account = x.values[0].value
-        weight_value = x.values[1]
-
-        # Determine bucket
-        if len(x.values) >= 3:
-            # Explicit bucket provided
-            bucket = x.values[2].value
-        else:
-            # No explicit bucket - find closest ancestor with directive
-            bucket = root_account  # Default
-            parts = account.split(':')
-            for i in range(len(parts) - 1, 0, -1):
-                ancestor = ':'.join(parts[:i])
-                if ancestor in accounts_with_weights:
-                    bucket = ancestor
-                    break
-
-        weight_entries.setdefault(bucket, {})
-
-        amount = getattr(weight_value, 'number', None)
-        currency = getattr(weight_value, 'currency', None)
-        if amount is not None and currency is not None:
-            if currency != default_currency:
-                raise ValueError(
-                    f"Weight for '{account}' uses currency '{currency}', "
-                    f"but only '{default_currency}' is allowed"
-                )
-            weight_entries[bucket][account] = (amount, currency)
-        else:
-            weight_entries[bucket][account] = weight_value.value
+    # Parse weight directives from ledger
+    weight_entries = parse_weight_directives(
+        ledger.all_entries_by_type.Custom,
+        root_account,
+        default_currency,
+        g.filtered.end_date
+    )
 
     # Build account map for conversion (needed to access node balances)
     account_map = {}
@@ -282,8 +153,12 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     build_map(root_node)
 
     # Convert any absolute amount weights to percentages
+    # Create price lookup closure to inject Flask context
+    def price_lookup(position):
+        return conversion.get_market_value(position, ledger.prices, g.filtered.end_date)
+
     weight_entries = convert_amounts_to_percentages(
-        weight_entries, account_map, default_currency, ledger
+        weight_entries, account_map, default_currency, price_lookup
     )
 
     weights = weight_list(root_node, weight_entries)

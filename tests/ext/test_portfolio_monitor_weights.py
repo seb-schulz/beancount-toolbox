@@ -11,6 +11,11 @@ from beancount_toolbox.ext.portfolio_monitor.weight_allocation import (
 )
 
 
+def dummy_price_lookup(position, date):
+    """Identity price lookup used by tests that only need signature compliance."""
+    return position
+
+
 class TestIsAncestor:
     """Test the is_ancestor helper function."""
 
@@ -434,11 +439,10 @@ class TestAbsoluteAmountWeights:
 
     def test_single_absolute_amount(self):
         """Single child with absolute amount, others share remainder."""
-        from beancount_toolbox.ext.portfolio_monitor import (
-            calculate_bucket_total,
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
             convert_amounts_to_percentages
         )
-        from unittest.mock import Mock, MagicMock
+        from unittest.mock import MagicMock
         from fava.core.inventory import CounterInventory
 
         # Create mock tree structure
@@ -469,11 +473,8 @@ class TestAbsoluteAmountWeights:
             }
         }
 
-        mock_ledger = Mock()
-        mock_ledger.prices = Mock()
-
         converted = convert_amounts_to_percentages(
-            weight_entries, account_map, "USD", mock_ledger
+            weight_entries, account_map, "USD", dummy_price_lookup
         )
 
         # Should convert to 0.2 (20%)
@@ -493,8 +494,10 @@ class TestAbsoluteAmountWeights:
 
     def test_mixed_absolute_and_percentage(self):
         """Mix of absolute amounts and percentage weights."""
-        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
-        from unittest.mock import Mock, MagicMock
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
+            convert_amounts_to_percentages
+        )
+        from unittest.mock import MagicMock
         from fava.core.inventory import CounterInventory
 
         root = TreeNode("Assets:US:ETrade")
@@ -525,11 +528,8 @@ class TestAbsoluteAmountWeights:
             }
         }
 
-        mock_ledger = Mock()
-        mock_ledger.prices = Mock()
-
         converted = convert_amounts_to_percentages(
-            weight_entries, account_map, "USD", mock_ledger
+            weight_entries, account_map, "USD", dummy_price_lookup
         )
 
         # Should convert amounts to percentages, keep percentages as-is
@@ -549,8 +549,10 @@ class TestAbsoluteAmountWeights:
 
     def test_amount_exceeds_bucket_total(self):
         """Absolute amount exceeding bucket total should raise error."""
-        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
-        from unittest.mock import Mock, MagicMock
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
+            convert_amounts_to_percentages
+        )
+        from unittest.mock import MagicMock
         from fava.core.inventory import CounterInventory
 
         root = TreeNode("Assets:US:ETrade")
@@ -576,17 +578,17 @@ class TestAbsoluteAmountWeights:
             }
         }
 
-        mock_ledger = Mock()
-
         with pytest.raises(ValueError, match="exceeds bucket.*total"):
             convert_amounts_to_percentages(
-                weight_entries, account_map, "USD", mock_ledger
+                weight_entries, account_map, "USD", dummy_price_lookup
             )
 
     def test_bucket_with_zero_total(self):
         """Bucket with zero total should raise error for absolute amounts."""
-        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
-        from unittest.mock import Mock, MagicMock
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
+            convert_amounts_to_percentages
+        )
+        from unittest.mock import MagicMock
         from fava.core.inventory import CounterInventory
 
         root = TreeNode("Assets:US:ETrade")
@@ -611,17 +613,17 @@ class TestAbsoluteAmountWeights:
             }
         }
 
-        mock_ledger = Mock()
-
         with pytest.raises(ValueError, match="zero total value"):
             convert_amounts_to_percentages(
-                weight_entries, account_map, "USD", mock_ledger
+                weight_entries, account_map, "USD", dummy_price_lookup
             )
 
     def test_all_children_absolute_amounts(self):
         """All children with absolute amounts summing to bucket total."""
-        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
-        from unittest.mock import Mock, MagicMock
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
+            convert_amounts_to_percentages
+        )
+        from unittest.mock import MagicMock
         from fava.core.inventory import CounterInventory
 
         root = TreeNode("Assets:US:ETrade")
@@ -653,10 +655,8 @@ class TestAbsoluteAmountWeights:
             }
         }
 
-        mock_ledger = Mock()
-
         converted = convert_amounts_to_percentages(
-            weight_entries, account_map, "USD", mock_ledger
+            weight_entries, account_map, "USD", dummy_price_lookup
         )
 
         assert converted == {
@@ -718,4 +718,3 @@ class TestDateFiltering:
         # So nothing should be skipped
         should_skip = end_date and future_date > end_date
         assert not should_skip  # Should NOT skip even future dates when end_date is None
-
