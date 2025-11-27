@@ -174,7 +174,16 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         account_currencies = {
             x.account: x.currencies for x in ledger.all_entries_by_type.Open}
 
+        closedAccounts = frozenset([
+            x.account
+            for x in ledger.all_entries_by_type.Close
+            if (g.filtered.end_date is None) or (g.filtered.end_date is not None and x.date <= g.filtered.end_date)
+        ])
+
         for account, node in tree.items():
+            if account in closedAccounts:
+                continue
+
             if account not in weights:
                 continue
 
