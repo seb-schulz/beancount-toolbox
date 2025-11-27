@@ -124,7 +124,8 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         tree = g.filtered.root_tree
         ledger = g.filtered.ledger
         default_currency = ledger.options["operating_currency"][0]
-        root_account = config.get('root_account', ledger.options["name_assets"])
+        root_account = config.get(
+            'root_account', ledger.options["name_assets"])
 
         root_node = None
         assets = ledger.options["name_assets"]
@@ -218,8 +219,8 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
                         row.quantity_delta(total),
                         row.price_date,
                     )
-                    for row in account_balances
-                ],
+                    for row in sorted(account_balances, key=lambda x: x.account)
+                ]
             ))
     except (ValueError, KeyError, IndexError) as e:
         return PortfolioError(error_message=str(e))
