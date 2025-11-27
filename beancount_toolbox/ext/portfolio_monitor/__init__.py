@@ -4,10 +4,10 @@ from datetime import date
 from decimal import Decimal
 
 from beancount.core import account_types
-from fava import ext, internal_api
+from fava import ext
 from fava.beans import protocols
 from fava.context import g
-from fava.core import charts, conversion, inventory, query, tree
+from fava.core import conversion, inventory, query
 
 from .weight_allocation import weight_list
 from .weight_conversion import convert_amounts_to_percentages
@@ -25,6 +25,7 @@ TABLE_HEADER = [
     query.InventoryColumn("Target Allocation"),
     query.InventoryColumn("Amount Delta"),
     query.InventoryColumn("Quantity Delta"),
+    query.DateColumn("Last Price Date"),
 ]
 
 
@@ -68,6 +69,7 @@ class Row:
     balance: inventory.CounterInventory
     currency: str
     price_per_unit: Decimal | None
+    price_date: date | None = None
     weight: Decimal | None = None
 
     @property
@@ -169,14 +171,20 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
             continue
 
         currency = account_currencies[account][0]
-        price_per_unit = ledger.prices.get_price(
-            (currency, default_currency), g.filtered.end_date) if len(account_currencies[node.name]) > 0 else None
+        price_per_unit = None
+        price_date = None
+        if len(account_currencies[node.name]) > 0:
+            price_date, price_per_unit = ledger.prices.get_price_point(
+                (currency, default_currency), g.filtered.end_date)
+            if price_per_unit is None:
+                price_date = None
 
         account_balances.append(Row(
             account=node.name,
             balance=node.balance,
             weight=weights[account],
             price_per_unit=price_per_unit,
+            price_date=price_date,
             currency=currency,
         ))
         total += to_default_currency(account_balances[-1].simple_balance)
@@ -194,7 +202,8 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
                     to_pct(row.current_allocation(total)),
                     to_pct(row.target_allocation),
                     row.amount_delta(total),
-                    row.quantity_delta(total)
+                    row.quantity_delta(total),
+                    row.price_date,
                 )
                 for row in account_balances
             ],
