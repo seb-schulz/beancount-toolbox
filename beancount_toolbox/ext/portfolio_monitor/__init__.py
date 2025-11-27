@@ -180,8 +180,17 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
             if (g.filtered.end_date is None) or (g.filtered.end_date is not None and x.date <= g.filtered.end_date)
         ])
 
+        excludedAccounts = frozenset([
+            x.values[0].value
+            for x in ledger.all_entries_by_type.Custom
+            if x.type == 'portfolio-exclude'
+            and ((g.filtered.end_date is None) or (x.date <= g.filtered.end_date))
+        ])
+
+        skippedAccounts = closedAccounts | excludedAccounts
+
         for account, node in tree.items():
-            if account in closedAccounts:
+            if account in skippedAccounts:
                 continue
 
             if account not in weights:
