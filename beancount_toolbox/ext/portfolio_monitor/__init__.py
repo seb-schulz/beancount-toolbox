@@ -14,6 +14,17 @@ from .weight_allocation import weight_list
 if typing.TYPE_CHECKING:  # pragma: no cover
     from flask.wrappers import Response
 
+TABLE_HEADER = [
+    query.StrColumn("account"),
+    query.InventoryColumn("Balance"),
+    query.InventoryColumn("Units"),
+    query.InventoryColumn("Price per Units"),
+    query.InventoryColumn("Current Allocation"),
+    query.InventoryColumn("Target Allocation"),
+    query.InventoryColumn("Amount Delta"),
+    query.InventoryColumn("Quantity Delta"),
+]
+
 
 class _Amount(typing.NamedTuple):
     number: Decimal
@@ -61,7 +72,8 @@ def calculate_bucket_total(
 
     # Convert to default currency using market prices
     simple_balance = balance.reduce(
-        lambda p: conversion.get_market_value(p, ledger.prices, g.filtered.end_date)
+        lambda p: conversion.get_market_value(
+            p, ledger.prices, g.filtered.end_date)
     )
 
     return simple_balance.get(default_currency, Decimal(0))
@@ -91,7 +103,8 @@ def convert_amounts_to_percentages(
 
     for bucket, weights in weight_entries.items():
         # Calculate bucket total once per bucket
-        bucket_total = calculate_bucket_total(bucket, account_map, default_currency, ledger)
+        bucket_total = calculate_bucket_total(
+            bucket, account_map, default_currency, ledger)
 
         converted[bucket] = {}
 
@@ -194,6 +207,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     """Get an account tree based on matching regex patterns."""
     tree = g.filtered.root_tree
     ledger = g.filtered.ledger
+    default_currency = ledger.options["operating_currency"][0]
     root_account = config.get('root_account', ledger.options["name_assets"])
 
     root_node = None
@@ -205,17 +219,26 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     if root_node is None:
         raise ValueError("root node not found")
 
+    if root_node.balance_children.is_empty():
+        return Portfolio(_Amount(Decimal(0), default_currency), query.QueryResultTable(TABLE_HEADER, []))
+
     # Build map of which accounts have weight directives
     accounts_with_weights = set()
     for x in ledger.all_entries_by_type.Custom:
         if x.type == 'portfolio-weight':
+            # Only consider directives on or before end_date
+            if g.filtered.end_date and x.date > g.filtered.end_date:
+                continue
             accounts_with_weights.add(x.values[0].value)
 
     # Parse directives with automatic bucket inference
-    default_currency = ledger.options["operating_currency"][0]
     weight_entries = {}
     for x in ledger.all_entries_by_type.Custom:
         if x.type != 'portfolio-weight':
+            continue
+
+        # Only consider directives on or before end_date
+        if g.filtered.end_date and x.date > g.filtered.end_date:
             continue
 
         account = x.values[0].value
@@ -237,27 +260,21 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
 
         weight_entries.setdefault(bucket, {})
 
-        # Check if it's an Amount (has .number and .currency attributes) or Decimal
-        if hasattr(weight_value, 'number') and hasattr(weight_value, 'currency'):
-            # It's an absolute amount
-            amount = weight_value.number
-            currency = weight_value.currency
-
-            # Validate currency
+        amount = getattr(weight_value, 'number', None)
+        currency = getattr(weight_value, 'currency', None)
+        if amount is not None and currency is not None:
             if currency != default_currency:
                 raise ValueError(
                     f"Weight for '{account}' uses currency '{currency}', "
                     f"but only '{default_currency}' is allowed"
                 )
-
-            # Store as tuple to distinguish from percentages
             weight_entries[bucket][account] = (amount, currency)
         else:
-            # It's a Decimal percentage
             weight_entries[bucket][account] = weight_value.value
 
     # Build account map for conversion (needed to access node balances)
     account_map = {}
+
     def build_map(node):
         account_map[node.name] = node
         for child in node.children:
@@ -298,16 +315,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
     return Portfolio(
         total=_Amount(number=total, currency=default_currency),
         table=query.QueryResultTable(
-            [
-                query.StrColumn("account"),
-                query.InventoryColumn("Balance"),
-                query.InventoryColumn("Units"),
-                query.InventoryColumn("Price per Units"),
-                query.InventoryColumn("Current Allocation"),
-                query.InventoryColumn("Target Allocation"),
-                query.InventoryColumn("Amount Delta"),
-                query.InventoryColumn("Quantity Delta"),
-            ],
+            TABLE_HEADER,
             [
                 (
                     row.account,

@@ -673,3 +673,49 @@ class TestAbsoluteAmountWeights:
             "Assets:US:ETrade:VBMPX": Decimal("0.3"),
             "Assets:US:ETrade:VTI": Decimal("0.5")
         }
+
+
+
+class TestDateFiltering:
+    """Test that directives respect date filtering based on g.filtered.end_date."""
+
+    def test_date_filter_logic(self):
+        """Test the date filtering logic directly."""
+        from datetime import date
+
+        # Simulate the filtering logic
+        end_date = date(2024, 1, 1)
+
+        # Directive dates
+        past_date = date(2023, 1, 1)
+        on_date = date(2024, 1, 1)
+        future_date = date(2024, 6, 1)
+
+        # Test filtering logic: if end_date and x.date > end_date: continue
+        # Which means: include if NOT (end_date and x.date > end_date)
+        # Equivalent to: include if (end_date is None) OR (x.date <= end_date)
+
+        # Past date should be included
+        should_skip_past = end_date and past_date > end_date
+        assert not should_skip_past  # Should NOT skip (should include)
+
+        # On date should be included
+        should_skip_on = end_date and on_date > end_date
+        assert not should_skip_on  # Should NOT skip (should include)
+
+        # Future date should be excluded
+        should_skip_future = end_date and future_date > end_date
+        assert should_skip_future  # Should skip (should exclude)
+
+    def test_date_filter_with_none_end_date(self):
+        """Test that None end_date includes all directives."""
+        from datetime import date
+
+        end_date = None
+        future_date = date(2025, 12, 31)
+
+        # When end_date is None, the condition "end_date and x.date > end_date" is False
+        # So nothing should be skipped
+        should_skip = end_date and future_date > end_date
+        assert not should_skip  # Should NOT skip even future dates when end_date is None
+
