@@ -1,42 +1,17 @@
 from __future__ import annotations
 
-import os
-import tempfile
-import textwrap
+import unittest
 from datetime import date
 from decimal import Decimal
 
-from beancount import loader
-from beancount.parser import cmptest
-from fava.context import g
-from fava.core import FavaLedger
-from flask import Flask
-
-from beancount_toolbox.ext.portfolio_monitor import portfolio
+from tests.ext._portfolio_test_helpers import load_portfolio
 
 
-class PortfolioMonitorPriceTest(cmptest.TestCase):
+class PortfolioMonitorPriceTest(unittest.TestCase):
     root_account = "Assets:Investments:Stock"
 
-    def _run_extension(self, doc: str, time_filter: str):
-        bean_data = textwrap.dedent(doc).strip() + "\n"
-        with tempfile.NamedTemporaryFile("w", suffix=".bean", delete=False) as handle:
-            handle.write(bean_data)
-            path = handle.name
-
-        try:
-            ledger = FavaLedger(path)
-            app = Flask(__name__)
-            with app.app_context():
-                filtered = ledger.get_filtered(time=time_filter)
-                g.ledger = ledger
-                g.filtered = filtered
-                return portfolio({"root_account": self.root_account}, None)
-        finally:
-            os.remove(path)
-
-    @loader.load_doc(expect_errors=False)
-    def test_last_price_value_matches_selected_period(self, entries, errors, options_map):
+    @load_portfolio(time_filter="2020-01-01 to 2020-01-03")
+    def test_last_price_value_matches_selected_period(self, result):
         """
           option "operating_currency" "USD"
           option "name_assets" "Assets"
@@ -53,19 +28,16 @@ class PortfolioMonitorPriceTest(cmptest.TestCase):
             Assets:Investments:Stock        10 STOCK {12 USD}
             Equity:Opening-Balances              -120 USD
         """
-        doc = self.test_last_price_value_matches_selected_period.__func__.__input__  # pyright: ignore[reportFunctionMemberAccess]
-        result = self._run_extension(doc, "2020-01-01 to 2020-01-03")
-
         rows_by_account = {row[0]: row for row in result.table.rows}
         stock_row = rows_by_account[self.root_account]
 
-        assert stock_row[-1] == date(2020, 1, 2)
+        self.assertEqual(stock_row[-1], date(2020, 1, 2))
         price_inventory = stock_row[3]
-        assert price_inventory is not None
-        assert price_inventory.get("USD") == Decimal("12")
+        self.assertIsNotNone(price_inventory)
+        self.assertEqual(price_inventory.get("USD"), Decimal("12"))
 
-    @loader.load_doc(expect_errors=False)
-    def test_last_price_value_updates_with_longer_period(self, entries, errors, options_map):
+    @load_portfolio(time_filter="2020-01-01 to 2020-01-10")
+    def test_last_price_value_updates_with_longer_period(self, result):
         """
           option "operating_currency" "USD"
           option "name_assets" "Assets"
@@ -82,13 +54,10 @@ class PortfolioMonitorPriceTest(cmptest.TestCase):
             Assets:Investments:Stock        10 STOCK {12 USD}
             Equity:Opening-Balances              -120 USD
         """
-        doc = self.test_last_price_value_updates_with_longer_period.__func__.__input__  # pyright: ignore[reportFunctionMemberAccess]
-        result = self._run_extension(doc, "2020-01-01 to 2020-01-10")
-
         rows_by_account = {row[0]: row for row in result.table.rows}
         stock_row = rows_by_account[self.root_account]
 
-        assert stock_row[-1] == date(2020, 1, 5)
+        self.assertEqual(stock_row[-1], date(2020, 1, 5))
         price_inventory = stock_row[3]
-        assert price_inventory is not None
-        assert price_inventory.get("USD") == Decimal("20")
+        self.assertIsNotNone(price_inventory)
+        self.assertEqual(price_inventory.get("USD"), Decimal("20"))

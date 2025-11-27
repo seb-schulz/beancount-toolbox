@@ -1,5 +1,6 @@
 """Tests for weight directive parsing."""
 import pytest
+import unittest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import Mock
@@ -11,12 +12,12 @@ from beancount_toolbox.ext.portfolio_monitor.weight_parsing import (
 )
 
 
-class TestFindAccountsWithWeights:
+class TestFindAccountsWithWeights(unittest.TestCase):
     """Test finding accounts with weight directives."""
 
     def test_empty_entries(self):
         """No entries returns empty set."""
-        assert find_accounts_with_weights([]) == set()
+        self.assertEqual(find_accounts_with_weights([]), set())
 
     def test_only_portfolio_weight_directives(self):
         """Only portfolio-weight directives are included."""
@@ -27,7 +28,7 @@ class TestFindAccountsWithWeights:
         entry2.values = [Mock(value='Assets:Intl')]
 
         result = find_accounts_with_weights([entry1, entry2])
-        assert result == {'Assets:US'}
+        self.assertEqual(result, {'Assets:US'})
 
     def test_date_filtering(self):
         """Directives after end_date are excluded."""
@@ -38,7 +39,7 @@ class TestFindAccountsWithWeights:
         entry2.values = [Mock(value='Assets:Intl')]
 
         result = find_accounts_with_weights([entry1, entry2], date(2024, 1, 1))
-        assert result == {'Assets:US'}
+        self.assertEqual(result, {'Assets:US'})
 
     def test_none_end_date_includes_all(self):
         """None end_date includes all directives."""
@@ -49,38 +50,38 @@ class TestFindAccountsWithWeights:
         entry2.values = [Mock(value='Assets:Intl')]
 
         result = find_accounts_with_weights([entry1, entry2], None)
-        assert result == {'Assets:US', 'Assets:Intl'}
+        self.assertEqual(result, {'Assets:US', 'Assets:Intl'})
 
 
-class TestInferBucket:
+class TestInferBucket(unittest.TestCase):
     """Test bucket inference logic."""
 
     def test_no_ancestor_uses_root(self):
         """Account with no ancestor directive uses root."""
         accounts = {'Assets:US', 'Assets:Intl'}
         result = infer_bucket('Assets:CA:Cash', accounts, 'Assets')
-        assert result == 'Assets'
+        self.assertEqual(result, 'Assets')
 
     def test_immediate_parent_with_directive(self):
         """Use immediate parent if it has directive."""
         accounts = {'Assets:US', 'Assets:US:Vanguard'}
         result = infer_bucket('Assets:US:Vanguard:VTSAX', accounts, 'Assets')
-        assert result == 'Assets:US:Vanguard'
+        self.assertEqual(result, 'Assets:US:Vanguard')
 
     def test_grandparent_with_directive(self):
         """Use grandparent if parent has no directive."""
         accounts = {'Assets:US'}
         result = infer_bucket('Assets:US:Vanguard:VTSAX', accounts, 'Assets')
-        assert result == 'Assets:US'
+        self.assertEqual(result, 'Assets:US')
 
     def test_root_account_itself(self):
         """Root account returns itself when no directives."""
         accounts = set()
         result = infer_bucket('Assets:US', accounts, 'Assets')
-        assert result == 'Assets'
+        self.assertEqual(result, 'Assets')
 
 
-class TestParseWeightDirectives:
+class TestParseWeightDirectives(unittest.TestCase):
     """Test full directive parsing."""
 
     def test_percentage_weight(self):
@@ -92,11 +93,11 @@ class TestParseWeightDirectives:
         ]
 
         result = parse_weight_directives([entry], 'Assets', 'USD')
-        assert result == {
+        self.assertEqual(result, {
             'Assets': {
                 'Assets:US:ITOT': Decimal('0.6')
             }
-        }
+        })
 
     def test_absolute_amount_weight(self):
         """Parse absolute amount weight."""
@@ -107,11 +108,11 @@ class TestParseWeightDirectives:
         ]
 
         result = parse_weight_directives([entry], 'Assets', 'USD')
-        assert result == {
+        self.assertEqual(result, {
             'Assets': {
                 'Assets:US:Cash': (Decimal('5000'), 'USD')
             }
-        }
+        })
 
     def test_explicit_bucket(self):
         """Parse directive with explicit bucket."""
@@ -123,11 +124,11 @@ class TestParseWeightDirectives:
         ]
 
         result = parse_weight_directives([entry], 'Assets', 'USD')
-        assert result == {
+        self.assertEqual(result, {
             'Assets:US': {
                 'Assets:US:Vanguard:VTSAX': Decimal('0.4')
             }
-        }
+        })
 
     def test_wrong_currency_raises(self):
         """Wrong currency raises ValueError."""
@@ -159,12 +160,12 @@ class TestParseWeightDirectives:
         result = parse_weight_directives([entry1, entry2], 'Assets', 'USD')
 
         # Vanguard uses root (Assets) as bucket
-        assert 'Assets' in result
-        assert result['Assets']['Assets:US:Vanguard'] == Decimal('0.65')
+        self.assertIn('Assets', result)
+        self.assertEqual(result['Assets']['Assets:US:Vanguard'], Decimal('0.65'))
 
         # Cash infers Vanguard as bucket
-        assert 'Assets:US:Vanguard' in result
-        assert result['Assets:US:Vanguard']['Assets:US:Vanguard:Cash'] == Decimal('0.2')
+        self.assertIn('Assets:US:Vanguard', result)
+        self.assertEqual(result['Assets:US:Vanguard']['Assets:US:Vanguard:Cash'], Decimal('0.2'))
 
     def test_date_filtering_excludes_future(self):
         """Future directives are excluded."""
@@ -183,6 +184,6 @@ class TestParseWeightDirectives:
         result = parse_weight_directives([entry1, entry2], 'Assets', 'USD', date(2024, 1, 1))
 
         # Only entry1 should be included
-        assert 'Assets' in result
-        assert 'Assets:US:ITOT' in result['Assets']
-        assert 'Assets:US:VBMPX' not in result['Assets']
+        self.assertIn('Assets', result)
+        self.assertIn('Assets:US:ITOT', result['Assets'])
+        self.assertNotIn('Assets:US:VBMPX', result['Assets'])
