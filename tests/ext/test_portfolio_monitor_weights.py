@@ -427,3 +427,249 @@ class TestWeightListComplexScenarios:
             "Assets:US:Vanguard:VTSAX": Decimal("0.0"),
             "Assets:International:VXUS": Decimal("0.4")
         }
+
+
+class TestAbsoluteAmountWeights:
+    """Test absolute amount weight conversion and allocation."""
+
+    def test_single_absolute_amount(self):
+        """Single child with absolute amount, others share remainder."""
+        from beancount_toolbox.ext.portfolio_monitor import (
+            calculate_bucket_total,
+            convert_amounts_to_percentages
+        )
+        from unittest.mock import Mock, MagicMock
+        from fava.core.inventory import CounterInventory
+
+        # Create mock tree structure
+        root = TreeNode("Assets:US:ETrade")
+        child1 = TreeNode("Assets:US:ETrade:ITOT")
+        child2 = TreeNode("Assets:US:ETrade:VBMPX")
+        child3 = TreeNode("Assets:US:ETrade:VTI")
+        root.children = [child1, child2, child3]
+
+        # Mock balance_children for bucket total = 10000 USD
+        mock_balance = MagicMock(spec=CounterInventory)
+        mock_simple = MagicMock()
+        mock_simple.get.return_value = Decimal("10000")
+        mock_balance.reduce.return_value = mock_simple
+        root.balance_children = mock_balance
+
+        account_map = {
+            "Assets:US:ETrade": root,
+            "Assets:US:ETrade:ITOT": child1,
+            "Assets:US:ETrade:VBMPX": child2,
+            "Assets:US:ETrade:VTI": child3
+        }
+
+        # Absolute amount: ITOT gets 2000 USD (= 20% of 10000)
+        weight_entries = {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": (Decimal("2000"), "USD")
+            }
+        }
+
+        mock_ledger = Mock()
+        mock_ledger.prices = Mock()
+
+        converted = convert_amounts_to_percentages(
+            weight_entries, account_map, "USD", mock_ledger
+        )
+
+        # Should convert to 0.2 (20%)
+        assert converted == {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": Decimal("0.2")
+            }
+        }
+
+        # Now test with weight_list
+        weights = weight_list(root, converted)
+        assert weights == {
+            "Assets:US:ETrade:ITOT": Decimal("0.2"),
+            "Assets:US:ETrade:VBMPX": Decimal("0.4"),
+            "Assets:US:ETrade:VTI": Decimal("0.4")
+        }
+
+    def test_mixed_absolute_and_percentage(self):
+        """Mix of absolute amounts and percentage weights."""
+        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
+        from unittest.mock import Mock, MagicMock
+        from fava.core.inventory import CounterInventory
+
+        root = TreeNode("Assets:US:ETrade")
+        child1 = TreeNode("Assets:US:ETrade:ITOT")
+        child2 = TreeNode("Assets:US:ETrade:VBMPX")
+        child3 = TreeNode("Assets:US:ETrade:VTI")
+        root.children = [child1, child2, child3]
+
+        # Mock balance_children for bucket total = 10000 USD
+        mock_balance = MagicMock(spec=CounterInventory)
+        mock_simple = MagicMock()
+        mock_simple.get.return_value = Decimal("10000")
+        mock_balance.reduce.return_value = mock_simple
+        root.balance_children = mock_balance
+
+        account_map = {
+            "Assets:US:ETrade": root,
+            "Assets:US:ETrade:ITOT": child1,
+            "Assets:US:ETrade:VBMPX": child2,
+            "Assets:US:ETrade:VTI": child3
+        }
+
+        # Mixed: ITOT gets 2000 USD (20%), VBMPX gets 30%
+        weight_entries = {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": (Decimal("2000"), "USD"),
+                "Assets:US:ETrade:VBMPX": Decimal("0.3")
+            }
+        }
+
+        mock_ledger = Mock()
+        mock_ledger.prices = Mock()
+
+        converted = convert_amounts_to_percentages(
+            weight_entries, account_map, "USD", mock_ledger
+        )
+
+        # Should convert amounts to percentages, keep percentages as-is
+        assert converted == {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": Decimal("0.2"),
+                "Assets:US:ETrade:VBMPX": Decimal("0.3")
+            }
+        }
+
+        weights = weight_list(root, converted)
+        assert weights == {
+            "Assets:US:ETrade:ITOT": Decimal("0.2"),
+            "Assets:US:ETrade:VBMPX": Decimal("0.3"),
+            "Assets:US:ETrade:VTI": Decimal("0.5")
+        }
+
+    def test_amount_exceeds_bucket_total(self):
+        """Absolute amount exceeding bucket total should raise error."""
+        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
+        from unittest.mock import Mock, MagicMock
+        from fava.core.inventory import CounterInventory
+
+        root = TreeNode("Assets:US:ETrade")
+        child = TreeNode("Assets:US:ETrade:ITOT")
+        root.children = [child]
+
+        # Mock balance_children for bucket total = 1000 USD
+        mock_balance = MagicMock(spec=CounterInventory)
+        mock_simple = MagicMock()
+        mock_simple.get.return_value = Decimal("1000")
+        mock_balance.reduce.return_value = mock_simple
+        root.balance_children = mock_balance
+
+        account_map = {
+            "Assets:US:ETrade": root,
+            "Assets:US:ETrade:ITOT": child
+        }
+
+        # Amount exceeds total: 1500 > 1000
+        weight_entries = {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": (Decimal("1500"), "USD")
+            }
+        }
+
+        mock_ledger = Mock()
+
+        with pytest.raises(ValueError, match="exceeds bucket.*total"):
+            convert_amounts_to_percentages(
+                weight_entries, account_map, "USD", mock_ledger
+            )
+
+    def test_bucket_with_zero_total(self):
+        """Bucket with zero total should raise error for absolute amounts."""
+        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
+        from unittest.mock import Mock, MagicMock
+        from fava.core.inventory import CounterInventory
+
+        root = TreeNode("Assets:US:ETrade")
+        child = TreeNode("Assets:US:ETrade:ITOT")
+        root.children = [child]
+
+        # Mock balance_children for bucket total = 0 USD
+        mock_balance = MagicMock(spec=CounterInventory)
+        mock_simple = MagicMock()
+        mock_simple.get.return_value = Decimal("0")
+        mock_balance.reduce.return_value = mock_simple
+        root.balance_children = mock_balance
+
+        account_map = {
+            "Assets:US:ETrade": root,
+            "Assets:US:ETrade:ITOT": child
+        }
+
+        weight_entries = {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": (Decimal("1000"), "USD")
+            }
+        }
+
+        mock_ledger = Mock()
+
+        with pytest.raises(ValueError, match="zero total value"):
+            convert_amounts_to_percentages(
+                weight_entries, account_map, "USD", mock_ledger
+            )
+
+    def test_all_children_absolute_amounts(self):
+        """All children with absolute amounts summing to bucket total."""
+        from beancount_toolbox.ext.portfolio_monitor import convert_amounts_to_percentages
+        from unittest.mock import Mock, MagicMock
+        from fava.core.inventory import CounterInventory
+
+        root = TreeNode("Assets:US:ETrade")
+        child1 = TreeNode("Assets:US:ETrade:ITOT")
+        child2 = TreeNode("Assets:US:ETrade:VBMPX")
+        child3 = TreeNode("Assets:US:ETrade:VTI")
+        root.children = [child1, child2, child3]
+
+        # Mock balance_children for bucket total = 10000 USD
+        mock_balance = MagicMock(spec=CounterInventory)
+        mock_simple = MagicMock()
+        mock_simple.get.return_value = Decimal("10000")
+        mock_balance.reduce.return_value = mock_simple
+        root.balance_children = mock_balance
+
+        account_map = {
+            "Assets:US:ETrade": root,
+            "Assets:US:ETrade:ITOT": child1,
+            "Assets:US:ETrade:VBMPX": child2,
+            "Assets:US:ETrade:VTI": child3
+        }
+
+        # All absolute amounts: 2000 + 3000 + 5000 = 10000
+        weight_entries = {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": (Decimal("2000"), "USD"),
+                "Assets:US:ETrade:VBMPX": (Decimal("3000"), "USD"),
+                "Assets:US:ETrade:VTI": (Decimal("5000"), "USD")
+            }
+        }
+
+        mock_ledger = Mock()
+
+        converted = convert_amounts_to_percentages(
+            weight_entries, account_map, "USD", mock_ledger
+        )
+
+        assert converted == {
+            "Assets:US:ETrade": {
+                "Assets:US:ETrade:ITOT": Decimal("0.2"),
+                "Assets:US:ETrade:VBMPX": Decimal("0.3"),
+                "Assets:US:ETrade:VTI": Decimal("0.5")
+            }
+        }
+
+        weights = weight_list(root, converted)
+        assert weights == {
+            "Assets:US:ETrade:ITOT": Decimal("0.2"),
+            "Assets:US:ETrade:VBMPX": Decimal("0.3"),
+            "Assets:US:ETrade:VTI": Decimal("0.5")
+        }

@@ -6670,7 +6670,7 @@ option "operating_currency" "USD"
 ; 2024-02-01 custom "portfolio-weight" Assets:US:ETrade:ITOT 0.1
 2023-01-01 custom "portfolio-weight" Assets:US:Federal:PreTax401k 0
 2023-01-01 custom "portfolio-weight" Assets:US:BayBook:Vacation 0
-2023-01-01 custom "portfolio-weight" Assets:US:BofA:Checking 0.1
+2023-01-01 custom "portfolio-weight" Assets:US:BofA:Checking 7233.68 USD
 2023-01-01 custom "portfolio-weight" Assets:US:Vanguard 0.65
-2023-01-01 custom "portfolio-weight" Assets:US:Vanguard:Cash 0.2
-2023-01-01 custom "portfolio-weight" Assets:US:ETrade 0.25
+2023-01-01 custom "portfolio-weight" Assets:US:Vanguard:Cash 0
+; 2023-01-01 custom "portfolio-weight" Assets:US:ETrade 0.25

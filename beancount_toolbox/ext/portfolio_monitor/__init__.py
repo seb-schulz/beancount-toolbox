@@ -36,6 +36,93 @@ class Portfolio:
     table: query.QueryResultTable
 
 
+def calculate_bucket_total(
+    bucket: str,
+    account_map: typing.Dict[str, tree.TreeNode],
+    default_currency: str,
+    ledger: typing.Any
+) -> Decimal:
+    """Calculate total value of a bucket in default currency.
+
+    Args:
+        bucket: The bucket account name
+        account_map: Dict mapping account names to TreeNode objects
+        default_currency: The operating currency
+        ledger: The ledger object for price lookups
+
+    Returns:
+        Total value of bucket in default currency
+    """
+    if bucket not in account_map:
+        raise ValueError(f"Bucket '{bucket}' not found in account tree")
+
+    node = account_map[bucket]
+    balance = node.balance_children
+
+    # Convert to default currency using market prices
+    simple_balance = balance.reduce(
+        lambda p: conversion.get_market_value(p, ledger.prices, g.filtered.end_date)
+    )
+
+    return simple_balance.get(default_currency, Decimal(0))
+
+
+def convert_amounts_to_percentages(
+    weight_entries: typing.Dict[str, typing.Dict[str, Decimal | tuple]],
+    account_map: typing.Dict[str, tree.TreeNode],
+    default_currency: str,
+    ledger: typing.Any
+) -> typing.Dict[str, typing.Dict[str, Decimal]]:
+    """Convert absolute amount weights to percentage weights.
+
+    Args:
+        weight_entries: Weights with mixed types (Decimal percentages or (amount, currency) tuples)
+        account_map: Dict mapping account names to TreeNode objects
+        default_currency: The operating currency
+        ledger: The ledger object for price lookups
+
+    Returns:
+        Weight entries with all values converted to Decimal percentages
+
+    Raises:
+        ValueError: If absolute amount exceeds bucket total
+    """
+    converted = {}
+
+    for bucket, weights in weight_entries.items():
+        # Calculate bucket total once per bucket
+        bucket_total = calculate_bucket_total(bucket, account_map, default_currency, ledger)
+
+        converted[bucket] = {}
+
+        for account, weight in weights.items():
+            if isinstance(weight, tuple):
+                # It's an absolute amount - convert to percentage
+                amount, currency = weight
+
+                if bucket_total == 0:
+                    raise ValueError(
+                        f"Cannot convert absolute amount for '{account}': "
+                        f"bucket '{bucket}' has zero total value"
+                    )
+
+                percentage = amount / bucket_total
+
+                if percentage > 1:
+                    raise ValueError(
+                        f"Absolute amount {amount} {currency} for '{account}' "
+                        f"exceeds bucket '{bucket}' total of {bucket_total} {default_currency} "
+                        f"(would be {percentage * 100:.2f}%)"
+                    )
+
+                converted[bucket][account] = percentage
+            else:
+                # It's already a percentage - keep as is
+                converted[bucket][account] = weight
+
+    return converted
+
+
 def to_pct(val: Decimal | None) -> inventory.SimpleCounterInventory:
     inv = inventory.SimpleCounterInventory()
     if val is not None:
@@ -125,12 +212,14 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
             accounts_with_weights.add(x.values[0].value)
 
     # Parse directives with automatic bucket inference
+    default_currency = ledger.options["operating_currency"][0]
     weight_entries = {}
     for x in ledger.all_entries_by_type.Custom:
         if x.type != 'portfolio-weight':
             continue
 
         account = x.values[0].value
+        weight_value = x.values[1]
 
         # Determine bucket
         if len(x.values) >= 3:
@@ -147,7 +236,38 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio:
                     break
 
         weight_entries.setdefault(bucket, {})
-        weight_entries[bucket][account] = x.values[1].value
+
+        # Check if it's an Amount (has .number and .currency attributes) or Decimal
+        if hasattr(weight_value, 'number') and hasattr(weight_value, 'currency'):
+            # It's an absolute amount
+            amount = weight_value.number
+            currency = weight_value.currency
+
+            # Validate currency
+            if currency != default_currency:
+                raise ValueError(
+                    f"Weight for '{account}' uses currency '{currency}', "
+                    f"but only '{default_currency}' is allowed"
+                )
+
+            # Store as tuple to distinguish from percentages
+            weight_entries[bucket][account] = (amount, currency)
+        else:
+            # It's a Decimal percentage
+            weight_entries[bucket][account] = weight_value.value
+
+    # Build account map for conversion (needed to access node balances)
+    account_map = {}
+    def build_map(node):
+        account_map[node.name] = node
+        for child in node.children:
+            build_map(child)
+    build_map(root_node)
+
+    # Convert any absolute amount weights to percentages
+    weight_entries = convert_amounts_to_percentages(
+        weight_entries, account_map, default_currency, ledger
+    )
 
     weights = weight_list(root_node, weight_entries)
 
