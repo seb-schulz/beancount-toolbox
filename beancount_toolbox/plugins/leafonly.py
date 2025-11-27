@@ -11,9 +11,7 @@ __license__ = "GNU GPLv2"
 
 import collections
 
-from beancount.core import getters
-from beancount.core import data
-from beancount.core import realization
+from beancount.core import data, getters, realization
 
 __plugins__ = ('validate_leaf_only', )
 
@@ -29,15 +27,18 @@ def validate_leaf_only(entries, unused_options_map):
     Returns:
       A list of new errors, if any were found.
     """
-    real_root = realization.realize([
-        e for e in entries if not any([
-            isinstance(e, data.Custom) and e.type == 'open',
-            isinstance(e, data.Open),
-            isinstance(e, data.Balance),
-            isinstance(e, data.Document)
-        ])
-    ],
-                                    compute_balance=False)
+    real_root = realization.realize(
+        [
+            e for e in entries if not any([
+                isinstance(e, data.Custom) and e.type == 'open',
+                isinstance(e, data.Custom) and e.type == 'portfolio-weight',
+                isinstance(e, data.Open),
+                isinstance(e, data.Balance),
+                isinstance(e, data.Document)
+            ])
+        ],
+        compute_balance=False,
+    )
 
     default_meta = data.new_metadata('<leafonly>', 0)
     open_close_map = None  # Lazily computed.
