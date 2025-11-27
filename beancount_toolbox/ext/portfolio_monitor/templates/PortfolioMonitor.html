@@ -11,5 +11,12 @@
 </p>
 
 {% set portfolio = extension.portfolio(arg_filter) %}
-<h3>Portfolio <small>(Total: {{ commodity_macros.render_num(ledger, portfolio.total.currency, portfolio.total.number) }})</small></h3>
-<svelte-component type="query-table"><script type="application/json">{{portfolio.table|tojson}}</script></svelte-component>
+
+{% if portfolio.error_message is defined %}
+  <div class="error-message" style="color: hsl(0deg 100% 30%); border: 1px solid hsl(0deg 100% 30%); padding: 1em; margin: 1em 0; border-radius: 3px;">
+    <strong>Error:</strong> {{ portfolio.error_message }}
+  </div>
+{% else %}
+  <h3>Portfolio <small>(Total: {{ commodity_macros.render_num(ledger, portfolio.total.currency, portfolio.total.number) }})</small></h3>
+  <svelte-component type="query-table"><script type="application/json">{{portfolio.table|tojson}}</script></svelte-component>
+{% endif %}
