@@ -6677,7 +6677,7 @@ option "operating_currency" "USD"
 
 ; Example portfolio-exclude directives - exclude accounts from portfolio monitoring
 ; without closing them in the ledger
-2022-01-01 custom "portfolio-exclude" Assets:US:Federal:OldAccount
+2022-01-01 custom "portfolio-exclude" Assets:US:ETrade:GLD
 2023-06-15 custom "portfolio-exclude" Assets:US:ETrade:Unused
 
 2024-12-31 close Assets:US:BayBook:Vacation

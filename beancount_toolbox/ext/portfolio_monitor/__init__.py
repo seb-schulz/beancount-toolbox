@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     from flask.wrappers import Response
 
 TABLE_HEADER = [
-    query.StrColumn("account"),
+    query.StrColumn("Account"),
     query.InventoryColumn("Balance"),
     query.InventoryColumn("Units"),
     query.InventoryColumn("Price per Units"),
@@ -203,7 +203,8 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
 
         # Renormalize target weights over included accounts so that Target Allocation
         # sums to 100% for the accounts shown in the report.
-        total_base_weight = sum(weights[account] for account in included_accounts)
+        total_base_weight = sum(weights[account]
+                                for account in included_accounts)
 
         if total_base_weight > 0:
             effective_weights = {
@@ -213,7 +214,8 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         else:
             # Fallback: distribute equally if all base weights are zero
             share = Decimal(1) / Decimal(len(included_accounts))
-            effective_weights = {account: share for account in included_accounts}
+            effective_weights = {
+                account: share for account in included_accounts}
 
         for account, node in tree.items():
             if account not in included_accounts:
