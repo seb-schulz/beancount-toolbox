@@ -2,6 +2,7 @@
 {% set ledger = ledger or g.ledger %}
 
 {% set arg_filter = request.args.get('account_filter') %}
+{% set arg_format_quantity = request.args.get('format_quantity') %}
 
 <p>
   <label for="portfolio-list-filter">Custom Account Filter:</label>
@@ -10,7 +11,7 @@
   <button id="portfolio-clear-filter">Clear Filter</button>
 </p>
 
-{% set portfolio = extension.portfolio(arg_filter) %}
+{% set portfolio = extension.portfolio(arg_format_quantity or "", arg_filter) %}
 
 {% if portfolio.error_message is defined %}
   <div class="error-message" style="color: hsl(0deg 100% 30%); border: 1px solid hsl(0deg 100% 30%); padding: 1em; margin: 1em 0; border-radius: 3px;">

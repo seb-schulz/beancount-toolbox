@@ -16,17 +16,26 @@ from .weight_parsing import parse_weight_directives
 if typing.TYPE_CHECKING:  # pragma: no cover
     from flask.wrappers import Response
 
-TABLE_HEADER = [
-    query.StrColumn("Account"),
-    query.InventoryColumn("Balance"),
-    query.InventoryColumn("Units"),
-    query.InventoryColumn("Price per Units"),
-    query.InventoryColumn("Current Allocation"),
-    query.InventoryColumn("Target Allocation"),
-    query.InventoryColumn("Amount Delta"),
-    query.InventoryColumn("Quantity Delta"),
-    query.DateColumn("Last Price Date"),
-]
+
+InventoryOrDecimal = typing.Literal['Inventory'] | typing.Literal['Decimal']
+
+
+def table_header(format_quantity: InventoryOrDecimal):
+    quantity_klass = query.InventoryColumn
+    if format_quantity == 'Decimal':
+        quantity_klass = query.DecimalColumn
+
+    return [
+        query.StrColumn("Account"),
+        query.InventoryColumn("Balance"),
+        query.InventoryColumn("Units"),
+        query.InventoryColumn("Price per Units"),
+        query.InventoryColumn("Current Allocation"),
+        query.InventoryColumn("Target Allocation"),
+        query.InventoryColumn("Amount Delta"),
+        quantity_klass("Quantity Delta"),
+        query.DateColumn("Last Price Date"),
+    ]
 
 
 class _Amount(typing.NamedTuple):
@@ -42,6 +51,10 @@ class Portfolio:
     """
     total: protocols.Amount
     table: query.QueryResultTable
+
+
+def empty_portfolio() -> Portfolio:
+    return Portfolio(_Amount(Decimal(0), g.ledger.options["operating_currency"][0]), query.QueryResultTable(table_header('Inventory'), []))
 
 
 @dataclass(frozen=True)
@@ -106,7 +119,7 @@ class Row:
         )
         return inv
 
-    def quantity_delta(self, total: Decimal) -> inventory.SimpleCounterInventory:
+    def quantity_delta(self, total: Decimal, formatting: InventoryOrDecimal) -> Decimal | inventory.SimpleCounterInventory:
         ca = (self.current_allocation(total) or Decimal(0)) * total
         ta = (self.target_allocation or Decimal(0)) * total
         delta = ta - ca
@@ -115,10 +128,15 @@ class Row:
         if self.price_per_unit is not None:
             units = delta / self.price_per_unit
             inv.add(self.currency, units)
+            if formatting == 'Decimal':
+                return units
+
+        if formatting == 'Decimal':
+            return Decimal(0)
         return inv
 
 
-def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | PortfolioError:
+def portfolio(config: typing.Any, format_quantity: InventoryOrDecimal, filter_str: str | None = None) -> Portfolio | PortfolioError:
     """Get an account tree based on matching regex patterns."""
     try:
         tree = g.filtered.root_tree
@@ -137,7 +155,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
             raise ValueError("root node not found")
 
         if root_node.balance_children.is_empty():
-            return Portfolio(_Amount(Decimal(0), default_currency), query.QueryResultTable(TABLE_HEADER, []))
+            return empty_portfolio()
 
         # Parse weight directives from ledger
         weight_entries = parse_weight_directives(
@@ -195,11 +213,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         }
 
         if not included_accounts:
-            # Nothing to show – return empty portfolio with zero total
-            return Portfolio(
-                _Amount(Decimal(0), default_currency),
-                query.QueryResultTable(TABLE_HEADER, []),
-            )
+            return empty_portfolio()
 
         # Renormalize target weights over included accounts so that Target Allocation
         # sums to 100% for the accounts shown in the report.
@@ -249,7 +263,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
         return Portfolio(
             total=_Amount(number=total, currency=default_currency),
             table=query.QueryResultTable(
-                TABLE_HEADER,
+                table_header(format_quantity),
                 [
                     (
                         row.account,
@@ -259,7 +273,7 @@ def portfolio(config: typing.Any, filter_str: str | None = None) -> Portfolio | 
                         to_pct(row.current_allocation(total)),
                         to_pct(row.target_allocation),
                         row.amount_delta(total),
-                        row.quantity_delta(total),
+                        row.quantity_delta(total, format_quantity),
                         row.price_date,
                     )
                     for row in sorted(account_balances, key=lambda x: x.account)
@@ -275,7 +289,13 @@ class PortfolioMonitor(ext.FavaExtensionBase):
 
     def portfolio(
         self,
+        format_quantity: str,
         filter_str: str | None = None,
     ) -> Portfolio | PortfolioError:
         """Get an account tree based on matching regex patterns."""
-        return portfolio(self.config, filter_str)
+        if format_quantity.lower() == 'decimal':
+            format_quantity = 'Decimal'
+        else:
+            format_quantity = 'Inventory'
+
+        return portfolio(self.config, format_quantity, filter_str)
