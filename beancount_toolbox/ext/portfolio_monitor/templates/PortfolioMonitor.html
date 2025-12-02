@@ -1,0 +1,53 @@
+{% import 'macros/_commodity_macros.html' as commodity_macros %}
+{% set ledger = ledger or g.ledger %}
+
+{% set arg_filter = request.args.get('account_filter') %}
+{% set arg_format_quantity = request.args.get('format_quantity') %}
+
+<p>
+  <label for="portfolio-list-filter">Custom Account Filter:</label>
+  <input id="portfolio-list-filter" value={{ arg_filter or "" }}>
+  <button id="portfolio-update-filter">Update Filter</button>
+  <button id="portfolio-clear-filter">Clear Filter</button>
+</p>
+
+{% set portfolio = extension.portfolio(arg_format_quantity or "", arg_filter) %}
+
+{% if portfolio.error_message is defined %}
+  <div class="error-message" style="color: hsl(0deg 100% 30%); border: 1px solid hsl(0deg 100% 30%); padding: 1em; margin: 1em 0; border-radius: 3px;">
+    <strong>Error:</strong> {{ portfolio.error_message }}
+  </div>
+{% else %}
+  <h3>Portfolio <small>(Total: {{ commodity_macros.render_num(ledger, portfolio.total.currency, portfolio.total.number) }})</small></h3>
+
+  <details>
+    <summary><strong>How target allocations are calculated (with examples)</strong></summary>
+    <ul style="padding: revert;margin: revert;list-style-type: revert;">
+      <li>Directives of the form <code>YYYY-MM-DD custom &quot;portfolio-weight&quot; &lt;ACCOUNT&gt; &lt;VALUE&gt;</code> define base target allocations over the full account tree. These can be percentages or absolute amounts (converted to percentages based on bucket totals).</li>
+      <li>Example (absolute amount target):<br>
+        <code>2022-01-01 custom &quot;portfolio-weight&quot; Assets:US:BofA:Checking 7233.68 USD</code><br>
+        This means “allocate 7,233.68&nbsp;USD of the portfolio to <code>Assets:US:BofA:Checking</code>”. The extension converts this amount into a percentage based on the total value of the associated bucket.
+      </li>
+      <li>Example (percentage targets over multiple accounts):<br>
+        <code>2020-01-01 custom &quot;portfolio-weight&quot; Assets:Investments:Stock1 0.5</code><br>
+        <code>2020-01-01 custom &quot;portfolio-weight&quot; Assets:Investments:Stock2 0.5</code><br>
+        Here each stock starts with a 50% base target of the portfolio.
+      </li>
+      <li>Example (hierarchical bucket):<br>
+        <code>2022-01-01 custom &quot;portfolio-weight&quot; Assets:US:Vanguard 0.65</code><br>
+        <code>2022-01-01 custom &quot;portfolio-weight&quot; Assets:US:Vanguard:Cash 0</code><br>
+        The <code>Assets:US:Vanguard</code> subtree is given 65% of the overall portfolio; within that subtree, the weight algorithm distributes the 65% across its children (respecting any additional <code>portfolio-weight</code> directives and equal‑sharing for unweighted siblings).
+      </li>
+      <li>Accounts that are closed (via a <code>close</code> directive) or explicitly excluded with <code>custom &quot;portfolio-exclude&quot;</code> at or before the report date are removed from the portfolio and from the portfolio total.</li>
+      <li>Example (excluding positions without closing them):<br>
+        <code>2022-01-01 custom &quot;portfolio-exclude&quot; Assets:US:ETrade:GLD</code><br>
+        <code>2023-06-15 custom &quot;portfolio-exclude&quot; Assets:US:ETrade:Unused</code><br>
+        These accounts are ignored by the portfolio monitor: they do not appear in the table, do not contribute to the portfolio total, and their weights are redistributed across the remaining accounts.
+      </li>
+      <li>The <em>Target Allocation</em> column is derived only from weight directives. After closed and excluded accounts are removed, the remaining accounts’ target weights are renormalized so that their target percentages sum to 100% for the rows shown.</li>
+      <li>The <em>Current Allocation</em> column is based on market value at the report date using the reduced portfolio total (only open, non‑excluded accounts). Amount and quantity deltas compare this current allocation to the renormalized target; balances are never used to infer target weights.</li>
+    </ul>
+  </details>
+
+  <svelte-component type="query-table"><script type="application/json">{{portfolio.table|tojson}}</script></svelte-component>
+{% endif %}

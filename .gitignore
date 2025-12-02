@@ -163,3 +163,5 @@ cython_debug/
 .bean-rofi.yaml
 
 node_modules/
+.claude/
+.mcp.json
