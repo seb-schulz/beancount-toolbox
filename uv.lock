@@ -78,6 +78,7 @@ source = { editable = "." }
 dependencies = [
     { name = "beancount" },
     { name = "beancount-reds-plugins" },
+    { name = "beangulp" },
     { name = "beanquery" },
     { name = "bottle" },
     { name = "fava" },
@@ -95,6 +96,7 @@ dev = [
 requires-dist = [
     { name = "beancount", specifier = "==3.2.0" },
     { name = "beancount-reds-plugins", specifier = "==0.4.0" },
+    { name = "beangulp", specifier = ">=0.2.0" },
     { name = "beanquery", specifier = "==0.2.0" },
     { name = "bottle", specifier = "==0.12.25,<0.13" },
     { name = "fava", specifier = "==1.30.7" },

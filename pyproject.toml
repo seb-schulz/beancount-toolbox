@@ -11,6 +11,7 @@ dependencies = [
     "fava==1.30.7",
     "bottle==0.12.25,<0.13",
     "beanquery==0.2.0",
+    "beangulp>=0.2.0",
 ]
 [dependency-groups]
 dev = [
