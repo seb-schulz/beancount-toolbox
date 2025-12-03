@@ -134,6 +134,24 @@ class TestDKBImporter(unittest.TestCase):
         # For now, just check that meta exists
         self.assertIsNotNone(transactions[0].meta)
 
+    def test_metadata_required_fields(self):
+        """Test that required metadata fields (filename, lineno) are present."""
+        entries = self.importer.extract(self.sample_file)
+
+        transactions = [e for e in entries if isinstance(e, data.Transaction)]
+
+        # All transactions must have filename and lineno in metadata
+        for txn in transactions:
+            self.assertIn('filename', txn.meta)
+            self.assertIn('lineno', txn.meta)
+
+            # Verify filename points to the sample file
+            self.assertEqual(txn.meta['filename'], self.sample_file)
+
+            # Verify lineno is a positive integer
+            self.assertIsInstance(txn.meta['lineno'], int)
+            self.assertGreater(txn.meta['lineno'], 0)
+
     def test_deduplication_same_file(self):
         """Test that importing same file twice produces no duplicates."""
         # First extraction

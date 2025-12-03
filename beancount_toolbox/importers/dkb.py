@@ -105,9 +105,11 @@ class DKBImporter(Importer):
         with open(filepath, encoding='utf-8-sig') as f:
             # Skip metadata lines until we find the actual CSV header
             # The header line always starts with "Buchungsdatum" (booking date column)
+            header_line_num = 0
             while True:
                 position = f.tell()
                 line = f.readline()
+                header_line_num += 1
 
                 if not line:
                     raise ValueError("Could not find DKB CSV header line in file")
@@ -124,7 +126,11 @@ class DKBImporter(Importer):
             # Store column names for categorizer
             fieldnames = None
 
-            for row_dict in reader:
+            # Track line numbers: header_line_num is the last line before data starts
+            # Add 1 for the header line consumed by DictReader
+            lineno_offset = header_line_num + 1
+
+            for lineno, row_dict in enumerate(reader, start=lineno_offset):
                 # Store fieldnames from first row
                 if fieldnames is None:
                     fieldnames = list(reader.fieldnames) if reader.fieldnames else []
@@ -157,8 +163,8 @@ class DKBImporter(Importer):
                 if kundenreferenz:
                     links.add(kundenreferenz.replace(' ', ''))
 
-                # Create metadata dict
-                meta = {}
+                # Create metadata dict with proper filename and lineno
+                meta = data.new_metadata(filepath, lineno)
 
                 # Build columns metadata with all non-empty fields
                 columns_data = {}
