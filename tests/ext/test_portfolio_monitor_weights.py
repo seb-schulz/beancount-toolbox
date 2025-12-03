@@ -5,8 +5,6 @@ from fava.core.tree import TreeNode
 
 from beancount_toolbox.ext.portfolio_monitor.weight_allocation import (
     is_ancestor,
-    preprocess_weights,
-    compute_weights,
     weight_list,
 )
 

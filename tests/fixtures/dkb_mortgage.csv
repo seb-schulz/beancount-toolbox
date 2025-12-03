@@ -1,0 +1,7 @@
+﻿"Girokonto";"DE89370400440532013000"
+"Zeitraum:";"01.11.2025 - 30.11.2025"
+"Kontostand vom 30.11.2025:";"2.549,23 €"
+""
+
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"15.11.25";"15.11.25";"Gebucht";"Max Mustermann";"Commerzbank AG";"DARLEHEN Konto 12345 IBAN DE89XXXXXXXXX6789 Tilgung 450,00 Zinsen 123,45";"Ausgang";"DE87200505501234567890";"-573,45";"DE85KKN00000123456";"MANDAT7890";"MTG2025"

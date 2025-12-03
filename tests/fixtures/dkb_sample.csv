@@ -1,0 +1,11 @@
+﻿"Girokonto";"DE89370400440532013000"
+"Zeitraum:";"01.10.2025 - 31.10.2025"
+"Kontostand vom 30.10.2025:";"1.234,56 €"
+""
+
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"24.10.25";"24.10.25";"Gebucht";"Max Mustermann";"Telekom Shop GmbH";"Mobilfunkrechnung Oktober 2025";"Ausgang";"DE12500105170648489890";"-19,99";"DE98ZZZ09999999999";"MREF67890";"REF12345"
+"15.10.25";"15.10.25";"Gebucht";"Max Mustermann";"Krankenkasse Plus";"Beitrag Oktober 2025, Vertragsnummer: 123456";"Ausgang";"DE87200505501234567890";"-255,50";"DE85KKN00000123456";"MANDAT7890";"MEMBER123"
+"13.10.25";"13.10.25";"Gebucht";"KARTENINHABER";"Supermarkt Frisch, Musterstadt";"Kartenzahlung Lebensmittel";"Ausgang";"DE44300209001234567891";"-42,50";"";"";""
+"10.10.25";"10.10.25";"Gebucht";"Firma Tech GmbH";"Max Mustermann";"Gehalt Oktober 2025";"Eingang";"DE33100205001234567892";"2500,00";"";"";"SALARY2025"
+"01.10.25";"01.10.25";"Gebucht";"Erika Musterfrau";"Max Mustermann";"Miete Anteil WG";"Eingang";"DE22100205009876543210";"400,00";"";"";""
