@@ -103,9 +103,20 @@ class DKBImporter(Importer):
         entries = []
 
         with open(filepath, encoding='utf-8-sig') as f:
-            # Skip the 5 header lines (including empty line after metadata)
-            for _ in range(5):
-                f.readline()
+            # Skip metadata lines until we find the actual CSV header
+            # The header line always starts with "Buchungsdatum" (booking date column)
+            while True:
+                position = f.tell()
+                line = f.readline()
+
+                if not line:
+                    raise ValueError("Could not find DKB CSV header line in file")
+
+                # Detect header by checking if line starts with expected first column name
+                if line.strip().startswith('"Buchungsdatum"'):
+                    # Reset file position to start of header line for DictReader
+                    f.seek(position)
+                    break
 
             # Now read the CSV data
             reader = csv.DictReader(f, delimiter=';', quotechar='"')
