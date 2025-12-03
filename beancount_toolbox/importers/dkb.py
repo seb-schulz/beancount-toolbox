@@ -26,11 +26,29 @@ Deduplication:
 
 import csv
 import datetime
+import re
 from decimal import Decimal
 from typing import Any, Optional
 
-from beancount.core import data, amount
+from beancount.core import amount, data
 from beangulp import Importer
+
+
+def _normalize_whitespace(text: str) -> str:
+    """Normalize whitespace in text fields.
+
+    Replaces multiple consecutive whitespace characters (spaces, tabs, newlines)
+    with a single space and strips leading/trailing whitespace.
+
+    Args:
+        text: Input text to normalize
+
+    Returns:
+        Text with normalized whitespace
+    """
+    if not text:
+        return text
+    return re.sub(r'\s+', ' ', text.strip())
 
 
 class DKBImporter(Importer):
@@ -112,7 +130,8 @@ class DKBImporter(Importer):
                 header_line_num += 1
 
                 if not line:
-                    raise ValueError("Could not find DKB CSV header line in file")
+                    raise ValueError(
+                        "Could not find DKB CSV header line in file")
 
                 # Detect header by checking if line starts with expected first column name
                 if line.strip().startswith('"Buchungsdatum"'):
@@ -133,7 +152,8 @@ class DKBImporter(Importer):
             for lineno, row_dict in enumerate(reader, start=lineno_offset):
                 # Store fieldnames from first row
                 if fieldnames is None:
-                    fieldnames = list(reader.fieldnames) if reader.fieldnames else []
+                    fieldnames = list(
+                        reader.fieldnames) if reader.fieldnames else []
 
                 # Convert DictReader row to list for categorizer compatibility
                 row = [row_dict.get(field, '') for field in fieldnames]
@@ -151,11 +171,12 @@ class DKBImporter(Importer):
 
                 # Parse amount (German decimal format: -19,99)
                 amount_str = row_dict['Betrag (€)']
-                amount_decimal = Decimal(amount_str.replace('.', '').replace(',', '.'))
+                amount_decimal = Decimal(
+                    amount_str.replace('.', '').replace(',', '.'))
 
                 # Get payee and narration
-                payee = row_dict.get('Zahlungsempfänger*in', '').strip()
-                narration = row_dict.get('Verwendungszweck', '').strip()
+                payee = _normalize_whitespace(row_dict.get('Zahlungsempfänger*in', ''))
+                narration = _normalize_whitespace(row_dict.get('Verwendungszweck', ''))
 
                 # Get link from Kundenreferenz if available
                 links = set()
@@ -170,7 +191,7 @@ class DKBImporter(Importer):
                 columns_data = {}
                 for col_name, col_value in row_dict.items():
                     if col_value and col_value.strip():
-                        columns_data[col_name] = col_value.strip()
+                        columns_data[col_name] = _normalize_whitespace(col_value)
 
                 if columns_data:
                     meta['columns'] = str(columns_data)
@@ -215,7 +236,8 @@ class DKBImporter(Importer):
                     if len(txn.postings) > 2:
                         # Filter out the placeholder posting
                         txn = txn._replace(
-                            postings=[p for p in txn.postings if p.account != 'Expenses:FIXME']
+                            postings=[
+                                p for p in txn.postings if p.account != 'Expenses:FIXME']
                         )
 
                 entries.append(txn)
