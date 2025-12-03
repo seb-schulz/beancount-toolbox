@@ -1,0 +1,8 @@
+﻿"Girokonto";"DE12345678901234567890"
+"Zeitraum:";"01.12.2025 - 15.12.2025"
+"Kontostand vom 15.12.2025:";"1.000,00 €"
+""
+
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"10.12.25";"10.12.25";"Gebucht";"Test Person";"Test    Company    Name    Street";"Payment reference";"Eingang";"DE11111111111111111111";"100,00";"DE98XXX00000999888";"REF001";"TEST001"
+"05.12.25";"05.12.25";"Gebucht";"Test Person";"Another Test Company";"Test    Payment    December    2025";"Ausgang";"DE22222222222222222222";"-50,00";"DE77YYY00000888777";"REF002";"TEST002"

@@ -233,6 +233,30 @@ class TestDKBImporter(unittest.TestCase):
             self.assertIsInstance(txn.narration, str)
             self.assertGreater(len(txn.narration), 0)
 
+    def test_excessive_whitespace_normalization(self):
+        """Test that excessive internal whitespace in text fields is normalized."""
+        whitespace_file = fixture_path('dkb_whitespace.csv')
+        entries = self.importer.extract(whitespace_file)
+
+        transactions = [e for e in entries if isinstance(e, data.Transaction)]
+        self.assertEqual(len(transactions), 2)
+
+        # First transaction: Check payee with excessive spaces is normalized
+        first_txn = transactions[0]
+        self.assertEqual(first_txn.payee, 'Test Company Name Street')
+        self.assertNotIn('  ', first_txn.payee)  # No double spaces
+
+        # Second transaction: Check narration with multiple spaces is normalized
+        second_txn = transactions[1]
+        self.assertEqual(second_txn.narration, 'Test Payment December 2025')
+        self.assertNotIn('  ', second_txn.narration)  # No double spaces
+
+        # Verify no leading/trailing whitespace in any transaction
+        for txn in transactions:
+            if txn.payee:
+                self.assertEqual(txn.payee, txn.payee.strip())
+            self.assertEqual(txn.narration, txn.narration.strip())
+
 
 class TestDKBImporterWithCategorizer(unittest.TestCase):
     """Test cases for DKB importer with categorizer and regex capture groups."""
