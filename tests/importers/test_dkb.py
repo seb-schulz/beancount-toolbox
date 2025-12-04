@@ -1,12 +1,13 @@
 """Tests for DKB CSV importer."""
 
 import unittest
-from os import path
 from decimal import Decimal
+from os import path
 
 from beancount.core import data
+
+from beancount_toolbox.importers import Categorizer
 from beancount_toolbox.importers.dkb import DKBImporter
-from beancount_toolbox.importers import Categorizer  # From parent importers.py module
 
 
 def fixture_path(filename):
@@ -68,9 +69,12 @@ class TestDKBImporter(unittest.TestCase):
         # First transaction: -19,99 EUR -> -19.99
         first_txn = transactions[0]
         bank_posting = [p for p in first_txn.postings
-                       if p.account == 'Assets:Current:Bank:DKB'][0]
-        self.assertEqual(bank_posting.units.number, Decimal('-19.99'))
-        self.assertEqual(bank_posting.units.currency, 'EUR')
+                        if p.account == 'Assets:Current:Bank:DKB'][0]
+        self.assertEqual(
+            bank_posting.units.number,  # type: ignore
+            Decimal('-19.99')
+        )
+        self.assertEqual(bank_posting.units.currency, 'EUR')  # type: ignore
 
     def test_payee_and_narration(self):
         """Test that payee and narration are extracted correctly."""
@@ -80,7 +84,8 @@ class TestDKBImporter(unittest.TestCase):
 
         # First transaction
         self.assertEqual(transactions[0].payee, 'Telekom Shop GmbH')
-        self.assertEqual(transactions[0].narration, 'Mobilfunkrechnung Oktober 2025')
+        self.assertEqual(transactions[0].narration,
+                         'Mobilfunkrechnung Oktober 2025')
 
     def test_link_from_kundenreferenz(self):
         """Test that Kundenreferenz is used as transaction link."""
@@ -103,13 +108,13 @@ class TestDKBImporter(unittest.TestCase):
         # Transaction 0-2 are expenses (negative amounts)
         for i in range(3):
             bank_posting = [p for p in transactions[i].postings
-                           if p.account == 'Assets:Current:Bank:DKB'][0]
+                            if p.account == 'Assets:Current:Bank:DKB'][0]
             self.assertLess(bank_posting.units.number, 0)
 
         # Transactions 3-4 are income (positive amounts)
         for i in range(3, 5):
             bank_posting = [p for p in transactions[i].postings
-                           if p.account == 'Assets:Current:Bank:DKB'][0]
+                            if p.account == 'Assets:Current:Bank:DKB'][0]
             self.assertGreater(bank_posting.units.number, 0)
 
     def test_account_assignment(self):
@@ -157,7 +162,8 @@ class TestDKBImporter(unittest.TestCase):
         # First extraction
         entries1 = self.importer.extract(self.sample_file)
 
-        transactions1 = [e for e in entries1 if isinstance(e, data.Transaction)]
+        transactions1 = [
+            e for e in entries1 if isinstance(e, data.Transaction)]
         self.assertEqual(len(transactions1), 5)
 
         # Second extraction with same file
@@ -167,8 +173,10 @@ class TestDKBImporter(unittest.TestCase):
         self.importer.deduplicate(entries2, entries1)
 
         # Check for duplicates
-        transactions2 = [e for e in entries2 if isinstance(e, data.Transaction)]
-        non_duplicates = [e for e in transactions2 if not e.meta.get('__duplicate__')]
+        transactions2 = [
+            e for e in entries2 if isinstance(e, data.Transaction)]
+        non_duplicates = [
+            e for e in transactions2 if not e.meta.get('__duplicate__')]
 
         # All should be marked as duplicates
         self.assertEqual(len(non_duplicates), 0)
@@ -178,7 +186,8 @@ class TestDKBImporter(unittest.TestCase):
         # First extraction from sample file (5 transactions)
         entries1 = self.importer.extract(self.sample_file)
 
-        transactions1 = [e for e in entries1 if isinstance(e, data.Transaction)]
+        transactions1 = [
+            e for e in entries1 if isinstance(e, data.Transaction)]
         self.assertEqual(len(transactions1), 5)
 
         # Second extraction from updated file (7 transactions: 5 old + 2 new)
@@ -188,8 +197,10 @@ class TestDKBImporter(unittest.TestCase):
         self.importer.deduplicate(entries2, entries1)
 
         # Check that only new transactions remain
-        transactions2 = [e for e in entries2 if isinstance(e, data.Transaction)]
-        non_duplicates = [e for e in transactions2 if not e.meta.get('__duplicate__')]
+        transactions2 = [
+            e for e in entries2 if isinstance(e, data.Transaction)]
+        non_duplicates = [
+            e for e in transactions2 if not e.meta.get('__duplicate__')]
 
         # Should have 2 new transactions
         self.assertEqual(len(non_duplicates), 2)
@@ -211,8 +222,10 @@ class TestDKBImporter(unittest.TestCase):
         self.importer.deduplicate(entries2, entries1)
 
         # All should be duplicates since nothing changed
-        transactions2 = [e for e in entries2 if isinstance(e, data.Transaction)]
-        non_duplicates = [e for e in transactions2 if not e.meta.get('__duplicate__')]
+        transactions2 = [
+            e for e in entries2 if isinstance(e, data.Transaction)]
+        non_duplicates = [
+            e for e in transactions2 if not e.meta.get('__duplicate__')]
 
         # No new transactions (all marked as duplicates)
         self.assertEqual(len(non_duplicates), 0)
@@ -244,18 +257,26 @@ class TestDKBImporter(unittest.TestCase):
         # First transaction: Check payee with excessive spaces is normalized
         first_txn = transactions[0]
         self.assertEqual(first_txn.payee, 'Test Company Name Street')
-        self.assertNotIn('  ', first_txn.payee)  # No double spaces
+        self.assertNotIn(
+            '  ',  # No double spaces
+            first_txn.payee  # type: ignore
+        )
 
         # Second transaction: Check narration with multiple spaces is normalized
         second_txn = transactions[1]
         self.assertEqual(second_txn.narration, 'Test Payment December 2025')
-        self.assertNotIn('  ', second_txn.narration)  # No double spaces
+        self.assertNotIn(
+            '  ',  # No double spaces
+            second_txn.narration  # type: ignore
+        )
 
         # Verify no leading/trailing whitespace in any transaction
         for txn in transactions:
             if txn.payee:
                 self.assertEqual(txn.payee, txn.payee.strip())
-            self.assertEqual(txn.narration, txn.narration.strip())
+            self.assertEqual(
+                txn.narration,
+                txn.narration.strip())  # type: ignore
 
 
 class TestDKBImporterWithCategorizer(unittest.TestCase):
@@ -305,38 +326,53 @@ class TestDKBImporterWithCategorizer(unittest.TestCase):
 
         # Check payee and narration
         self.assertEqual(txn.payee, 'Commerzbank AG')
-        self.assertIn('DARLEHEN', txn.narration)
-        self.assertIn('Tilgung 450,00', txn.narration)
-        self.assertIn('Zinsen 123,45', txn.narration)
+        self.assertIn('DARLEHEN', txn.narration)  # type: ignore
+        self.assertIn('Tilgung 450,00', txn.narration)  # type: ignore
+        self.assertIn('Zinsen 123,45', txn.narration)  # type: ignore
 
         # Check that we have 3 postings (bank + principal + interest)
         self.assertEqual(len(txn.postings), 3)
 
         # Find each posting by account
         bank_posting = next(p for p in txn.postings
-                           if 'Assets:Current:Bank:DKB' in p.account)
+                            if 'Assets:Current:Bank:DKB' in p.account)
         principal_posting = next(p for p in txn.postings
-                                if 'Liabilities:Bank:Mortgage' in p.account)
+                                 if 'Liabilities:Bank:Mortgage' in p.account)
         interest_posting = next(p for p in txn.postings
-                               if 'Expenses:Financial:Interest' in p.account)
+                                if 'Expenses:Financial:Interest' in p.account)
 
         # Check bank posting (with sub_account)
-        self.assertEqual(bank_posting.account, 'Assets:Current:Bank:DKB:RealEstate')
-        self.assertEqual(bank_posting.units.number, Decimal('-573.45'))
-        self.assertEqual(bank_posting.units.currency, 'EUR')
+        self.assertEqual(bank_posting.account,
+                         'Assets:Current:Bank:DKB:RealEstate')
+        self.assertEqual(
+            bank_posting.units.number,  # type: ignore
+            Decimal('-573.45'))
+        self.assertEqual(
+            bank_posting.units.currency,   # type: ignore
+            'EUR')
 
         # Check principal posting (extracted from narration)
-        self.assertEqual(principal_posting.account, 'Liabilities:Bank:Mortgage:CoBa:6789')
-        self.assertEqual(principal_posting.units.number, Decimal('450.00'))
-        self.assertEqual(principal_posting.units.currency, 'EUR')
+        self.assertEqual(principal_posting.account,
+                         'Liabilities:Bank:Mortgage:CoBa:6789')
+        self.assertEqual(
+            principal_posting.units.number,   # type: ignore
+            Decimal('450.00'))
+        self.assertEqual(
+            principal_posting.units.currency,  # type: ignore
+            'EUR')
 
         # Check interest posting (extracted from narration)
-        self.assertEqual(interest_posting.account, 'Expenses:Financial:Interest:Mortgage')
-        self.assertEqual(interest_posting.units.number, Decimal('123.45'))
-        self.assertEqual(interest_posting.units.currency, 'EUR')
+        self.assertEqual(interest_posting.account,
+                         'Expenses:Financial:Interest:Mortgage')
+        self.assertEqual(
+            interest_posting.units.number,   # type: ignore
+            Decimal('123.45'))
+        self.assertEqual(
+            interest_posting.units.currency,   # type: ignore
+            'EUR')
 
         # Verify the amounts balance correctly
-        total = sum(p.units.number for p in txn.postings)
+        total = sum(p.units.number for p in txn.postings)  # type: ignore
         self.assertEqual(total, Decimal('0'))
 
     def test_categorizer_account_suffix_substitution(self):
@@ -346,11 +382,12 @@ class TestDKBImporterWithCategorizer(unittest.TestCase):
 
         txn = transactions[0]
         principal_posting = next(p for p in txn.postings
-                                if 'Liabilities:Bank:Mortgage' in p.account)
+                                 if 'Liabilities:Bank:Mortgage' in p.account)
 
         # The account suffix '6789' should be extracted from the IBAN in narration
         self.assertIn('6789', principal_posting.account)
-        self.assertEqual(principal_posting.account, 'Liabilities:Bank:Mortgage:CoBa:6789')
+        self.assertEqual(principal_posting.account,
+                         'Liabilities:Bank:Mortgage:CoBa:6789')
 
     def test_categorizer_sub_account(self):
         """Test that sub_account is correctly appended to bank account."""
@@ -359,10 +396,11 @@ class TestDKBImporterWithCategorizer(unittest.TestCase):
 
         txn = transactions[0]
         bank_posting = next(p for p in txn.postings
-                           if 'Assets:Current:Bank:DKB' in p.account)
+                            if 'Assets:Current:Bank:DKB' in p.account)
 
         # The sub_account 'RealEstate' should be appended to the bank account
-        self.assertEqual(bank_posting.account, 'Assets:Current:Bank:DKB:RealEstate')
+        self.assertEqual(bank_posting.account,
+                         'Assets:Current:Bank:DKB:RealEstate')
 
 
 if __name__ == '__main__':

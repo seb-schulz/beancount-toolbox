@@ -8,14 +8,25 @@ This importer handles DKB bank CSV exports with the following characteristics:
 - 12 columns including IBAN, reference numbers, and transaction details
 
 Usage:
+    ```python
+    #!/usr/bin/env python3
+    import beangulp
     from beancount_toolbox.importers.dkb import DKBImporter
+    from beancount_toolbox.importers import Categorizer
 
-    # Create importer
-    importer = DKBImporter(account='Assets:Current:Bank:DKB')
+    categorizer = Categorizer.from_yaml_file('rules.yaml', iban=7)
 
-    # Use with beangulp
-    # beangulp identify imports/
-    # beangulp extract imports/ -e existing.bean
+    CONFIG = [
+        DKBImporter(
+            account='Assets:Current:Bank:DKB',
+            categorizer=categorizer,
+        ),
+    ]
+
+    if __name__ == '__main__':
+        ingest = beangulp.Ingest(CONFIG)
+        ingest()
+    ```
 
 Deduplication:
     This importer relies on beangulp's built-in deduplication mechanism.
@@ -25,13 +36,11 @@ Deduplication:
 """
 
 import csv
-import datetime
 import re
-from decimal import Decimal
 from typing import Any, Optional
 
-from beancount.core import amount, data
-from beangulp import Importer
+from beancount.core import data
+from beangulp.importers.csvbase import Amount, Column, Date, Importer, Order
 
 
 def _normalize_whitespace(text: str) -> str:
@@ -51,8 +60,26 @@ def _normalize_whitespace(text: str) -> str:
     return re.sub(r'\s+', ' ', text.strip())
 
 
+class NormalizedColumn(Column):
+    """Column that normalizes whitespace in the value."""
+
+    def parse(self, value):
+        return _normalize_whitespace(value)
+
+
 class DKBImporter(Importer):
     """Importer for DKB bank CSV exports."""
+
+    # CSV file format configuration
+    encoding = 'utf-8-sig'  # Handle UTF-8 BOM
+    skiplines = 5  # Skip 5 metadata/empty lines before column names
+    order = None  # Let csvbase auto-detect and normalize to ascending order
+
+    date = Date('Buchungsdatum', frmt='%d.%m.%y')  # type: ignore[assignment]
+    amount = Amount('Betrag (€)', subs={r'\.': '', r',': '.'})
+    payee = NormalizedColumn('Zahlungsempfänger*in')
+    narration = NormalizedColumn('Verwendungszweck')
+    link = Column('Kundenreferenz')
 
     def __init__(self, account: str, categorizer: Optional[Any] = None):
         """Initialize DKB importer.
@@ -61,13 +88,37 @@ class DKBImporter(Importer):
             account: Beancount account name for the bank account (e.g., 'Assets:Current:Bank:DKB')
             categorizer: Optional Categorizer instance for automatic transaction categorization
         """
-        self._account = account
+        super().__init__(account=account, currency='EUR', flag='*')
         self.categorizer = categorizer
+
+        # Create custom CSV dialect for DKB (semicolon-separated)
+        class DKBDialect(csv.excel):
+            delimiter = ';'
+        self.dialect = DKBDialect
 
     @property
     def name(self) -> str:
         """Return importer name."""
         return 'DKB'
+
+    def extract(self, filepath: str, existing: Optional[data.Entries] = None) -> data.Entries:
+        """Extract transactions from the DKB CSV file.
+
+        Args:
+            filepath: Path to the CSV file
+            existing: Existing entries for deduplication
+
+        Returns:
+            List of extracted transaction directives (in original CSV order)
+        """
+        if existing is None:
+            existing = []
+
+        entries = super().extract(filepath, existing)
+        if self.order == Order.DESCENDING:
+            entries.reverse()
+
+        return entries
 
     def identify(self, filepath: str) -> bool:
         """Identify DKB CSV files by checking for specific header structure.
@@ -97,149 +148,81 @@ class DKBImporter(Importer):
         except (IOError, UnicodeDecodeError):
             return False
 
-    def account(self, filepath: str) -> str:
-        """Return the account for transactions from this file.
+    def metadata(self, filepath: str, lineno: int, row) -> dict:
+        """Build transaction metadata dictionary with all CSV columns.
 
         Args:
-            filepath: Path to the file
+            filepath: Path to the file being imported
+            lineno: Line number of the data being processed
+            row: The data row being processed (tuple of CSV values)
 
         Returns:
-            Account name
+            A metadata dictionary
         """
-        return self._account
+        meta = data.new_metadata(filepath, lineno)
 
-    def extract(self, filepath: str, existing: Optional[data.Entries] = None) -> data.Entries:
-        """Extract transactions from the DKB CSV file.
+        # Build columns metadata with all non-empty fields from the raw row
+        # The row is a tuple, so we need to get the original CSV column names
+        # We'll reconstruct this from the raw tuple data
+        if len(row) >= 12:  # DKB has 12 columns
+            column_names = [
+                'Buchungsdatum', 'Wertstellung', 'Status', 'Zahlungspflichtige*r',
+                'Zahlungsempfänger*in', 'Verwendungszweck', 'Umsatztyp', 'IBAN',
+                'Betrag (€)', 'Gläubiger-ID', 'Mandatsreferenz', 'Kundenreferenz'
+            ]
+
+            columns_data = {}
+            for col_name, col_value in zip(column_names, row):
+                if col_value and col_value.strip():
+                    columns_data[col_name] = _normalize_whitespace(col_value)
+
+            if columns_data:
+                meta['columns'] = str(columns_data)
+
+        return meta
+
+    def finalize(self, txn: data.Transaction, row) -> Optional[data.Transaction]:
+        """Post-process the transaction to add categorizer support and fix link format.
 
         Args:
-            filepath: Path to the CSV file
-            existing: Existing entries for deduplication
+            txn: The just-built Transaction object
+            row: The data row being processed
 
         Returns:
-            List of extracted transaction directives
+            A potentially extended or modified Transaction object or None
         """
-        entries = []
+        # Clean up link (remove spaces) and only include if non-empty
+        link_value = row.link.strip() if hasattr(row, 'link') and row.link else ''
+        links = {link_value.replace(' ', '')} if link_value else set()
 
-        with open(filepath, encoding='utf-8-sig') as f:
-            # Skip metadata lines until we find the actual CSV header
-            # The header line always starts with "Buchungsdatum" (booking date column)
-            header_line_num = 0
-            while True:
-                position = f.tell()
-                line = f.readline()
-                header_line_num += 1
+        # Create placeholder posting for expense/income account
+        placeholder_posting = data.Posting(
+            account='Expenses:FIXME',
+            units=None,  # Auto-balanced
+            cost=None,
+            price=None,
+            flag=None,
+            meta={},
+        )
 
-                if not line:
-                    raise ValueError(
-                        "Could not find DKB CSV header line in file")
+        # Update transaction with cleaned links and placeholder posting
+        # Note: payee is already set from the 'payee' column (Zahlungsempfänger*in)
+        txn = txn._replace(
+            links=links,
+            postings=list(txn.postings) + [placeholder_posting]
+        )
 
-                # Detect header by checking if line starts with expected first column name
-                if line.strip().startswith('"Buchungsdatum"'):
-                    # Reset file position to start of header line for DictReader
-                    f.seek(position)
-                    break
+        # Apply categorizer if configured
+        if self.categorizer:
+            # Convert row tuple to list for categorizer compatibility
+            row_list = list(row)
+            txn = self.categorizer(txn, row_list)
 
-            # Now read the CSV data
-            reader = csv.DictReader(f, delimiter=';', quotechar='"')
-
-            # Store column names for categorizer
-            fieldnames = None
-
-            # Track line numbers: header_line_num is the last line before data starts
-            # Add 1 for the header line consumed by DictReader
-            lineno_offset = header_line_num + 1
-
-            for lineno, row_dict in enumerate(reader, start=lineno_offset):
-                # Store fieldnames from first row
-                if fieldnames is None:
-                    fieldnames = list(
-                        reader.fieldnames) if reader.fieldnames else []
-
-                # Convert DictReader row to list for categorizer compatibility
-                row = [row_dict.get(field, '') for field in fieldnames]
-
-                # Skip rows without required fields
-                if not row_dict.get('Buchungsdatum') or not row_dict.get('Betrag (€)'):
-                    continue
-
-                # Parse date (dd.mm.yy format)
-                date_str = row_dict['Buchungsdatum']
-                day, month, year = date_str.split('.')
-                # Assume 20xx for 2-digit years
-                year_full = 2000 + int(year)
-                txn_date = datetime.date(year_full, int(month), int(day))
-
-                # Parse amount (German decimal format: -19,99)
-                amount_str = row_dict['Betrag (€)']
-                amount_decimal = Decimal(
-                    amount_str.replace('.', '').replace(',', '.'))
-
-                # Get payee and narration
-                payee = _normalize_whitespace(row_dict.get('Zahlungsempfänger*in', ''))
-                narration = _normalize_whitespace(row_dict.get('Verwendungszweck', ''))
-
-                # Get link from Kundenreferenz if available
-                links = set()
-                kundenreferenz = row_dict.get('Kundenreferenz', '').strip()
-                if kundenreferenz:
-                    links.add(kundenreferenz.replace(' ', ''))
-
-                # Create metadata dict with proper filename and lineno
-                meta = data.new_metadata(filepath, lineno)
-
-                # Build columns metadata with all non-empty fields
-                columns_data = {}
-                for col_name, col_value in row_dict.items():
-                    if col_value and col_value.strip():
-                        columns_data[col_name] = _normalize_whitespace(col_value)
-
-                if columns_data:
-                    meta['columns'] = str(columns_data)
-
-                # Create transaction with two postings
-                # First posting: to the bank account (with amount from CSV)
-                # Second posting: placeholder for expense/income (auto-balanced)
-                txn = data.Transaction(
-                    meta=meta,
-                    date=txn_date,
-                    flag='*',
-                    payee=payee if payee else None,
-                    narration=narration,
-                    tags=set(),
-                    links=links,
-                    postings=[
-                        data.Posting(
-                            account=self._account,
-                            units=amount.Amount(amount_decimal, 'EUR'),
-                            cost=None,
-                            price=None,
-                            flag=None,
-                            meta={},
-                        ),
-                        data.Posting(
-                            account='Expenses:FIXME',  # Placeholder
-                            units=None,  # Auto-balanced
-                            cost=None,
-                            price=None,
-                            flag=None,
-                            meta={},
-                        ),
-                    ],
+            # Remove the placeholder posting if categorizer added real postings
+            if len(txn.postings) > 2:
+                txn = txn._replace(
+                    postings=[p for p in txn.postings if p.account !=
+                              'Expenses:FIXME']
                 )
 
-                # Apply categorizer if configured
-                if self.categorizer:
-                    txn = self.categorizer(txn, row)
-                    # Remove the placeholder posting if categorizer added real postings
-                    # Categorizer adds postings to the end, so if we have more than 2 postings,
-                    # remove the second one (Expenses:FIXME placeholder)
-                    if len(txn.postings) > 2:
-                        # Filter out the placeholder posting
-                        txn = txn._replace(
-                            postings=[
-                                p for p in txn.postings if p.account != 'Expenses:FIXME']
-                        )
-
-                entries.append(txn)
-
-        return entries
+        return txn
