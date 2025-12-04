@@ -1,6 +1,5 @@
 """Categorizer for automatic transaction categorization."""
 
-import hashlib
 import re
 
 import yaml
@@ -17,7 +16,7 @@ class Categorizer(object):
     assign expense/income accounts and add additional postings.
 
     Example usage:
-        categorizer = Categorizer.from_yaml_file('rules.yaml', iban=7)
+        categorizer = Categorizer.from_yaml_file('rules.yaml')
         importer = DKBImporter(account='Assets:Bank:DKB', categorizer=categorizer)
     """
 
@@ -35,18 +34,13 @@ class Categorizer(object):
         with open(filename) as fp:
             return cls(yaml.safe_load(fp), **kwargs)
 
-    def __init__(self, rules, *, bic=None, iban=None, sha1v2=None) -> None:
-        """Initialize categorizer with rules and metadata configuration.
+    def __init__(self, rules) -> None:
+        """Initialize categorizer with rules.
 
         Args:
             rules: List of rule dictionaries from YAML
-            bic: Optional column index for BIC metadata
-            iban: Optional column index for IBAN metadata
-            sha1v2: Optional list of column indices for hash generation
         """
         self.rules = rules
-        self._bic, self._iban = bic, iban
-        self._sha1v2 = sha1v2
         self.column_map = {}
 
     def normalize_transaction(self, txn, row):
@@ -79,16 +73,7 @@ class Categorizer(object):
         if txn.date == txn.meta.get('date', None):
             del txn.meta['date']
 
-        if self._iban is not None:
-            txn.meta['iban'] = row[self._iban]
-        if self._bic is not None:
-            txn.meta['bic'] = row[self._bic]
-
         txn = self.normalize_transaction(txn, row)
-
-        if self._sha1v2 is not None:
-            txn.meta['sha1v2'] = hashlib.sha1(''.join(
-                [row[i] for i in self._sha1v2]).encode('utf-8')).hexdigest()
 
         def sanitize_row(x):
             return re.sub(r'\s\s+', ' ', x, re.MULTILINE).strip()
@@ -98,8 +83,7 @@ class Categorizer(object):
                 '{',
                 ','.join(f"{col!r}:{sanitize_row(row[idx])!r}"
                          for col, idx in self.column_map.items()
-                         if len(row[idx]) > 0 and idx not in (self._iban,
-                                                              self._bic)),
+                         if len(row[idx]) > 0),
                 '}',
             ])
 
