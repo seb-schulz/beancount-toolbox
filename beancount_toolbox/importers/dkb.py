@@ -12,14 +12,11 @@ Usage:
     #!/usr/bin/env python3
     import beangulp
     from beancount_toolbox.importers.dkb import DKBImporter
-    from beancount_toolbox.importers import Categorizer
-
-    categorizer = Categorizer.from_yaml_file('rules.yaml', iban=7)
 
     CONFIG = [
         DKBImporter(
             account='Assets:Current:Bank:DKB',
-            categorizer=categorizer,
+            rules_path='rules.yaml',
         ),
     ]
 
@@ -41,6 +38,8 @@ from typing import Any, Optional
 
 from beancount.core import data
 from beangulp.importers.csvbase import Amount, Column, Date, Importer, Order
+
+from .categorizer import Categorizer
 
 
 def _normalize_whitespace(text: str) -> str:
@@ -81,19 +80,28 @@ class DKBImporter(Importer):
     narration = NormalizedColumn('Verwendungszweck')
     link = Column('Kundenreferenz')
 
-    def __init__(self, account: str, categorizer: Optional[Any] = None):
+    def __init__(
+        self,
+        account: str,
+        categorizer: Optional[Categorizer] = None,
+        rules_path: Optional[str] = None,
+    ):
         """Initialize DKB importer.
 
         Args:
-            account: Beancount account name for the bank account (e.g., 'Assets:Current:Bank:DKB')
-            categorizer: Optional Categorizer instance for automatic transaction categorization
+            account: Beancount account name for the bank account.
+            categorizer: A pre-initialized Categorizer instance.
+            rules_path: Path to a YAML file for automatic categorization.
         """
         super().__init__(account=account, currency='EUR', flag='*')
+
         self.categorizer = categorizer
+        if not self.categorizer and rules_path:
+            self.categorizer = Categorizer.from_yaml_file(rules_path)
 
         # Create custom CSV dialect for DKB (semicolon-separated)
         class DKBDialect(csv.excel):
-            delimiter = ';'
+            delimiter = ";"
         self.dialect = DKBDialect
 
     @property
