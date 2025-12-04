@@ -1,12 +1,19 @@
 """Tests for DKB CSV importer."""
 
 import unittest
+
 from decimal import Decimal
+
 from os import path
+
+
 
 from beancount.core import data
 
+
+
 from beancount_toolbox.importers import Categorizer
+
 from beancount_toolbox.importers.dkb import DKBImporter
 
 

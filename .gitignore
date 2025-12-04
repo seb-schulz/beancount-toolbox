@@ -166,3 +166,4 @@ node_modules/
 .claude/
 .mcp.json
 *.local.md
+GEMINI.md
