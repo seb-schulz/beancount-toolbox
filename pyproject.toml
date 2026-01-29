@@ -8,7 +8,7 @@ dependencies = [
     "beancount-reds-plugins==0.4.0",
     "pyyaml==6.0.3",
     "pydantic==2.12.5",
-    "fava==1.30.7",
+    "fava==1.30.11",
     "bottle==0.12.25,<0.13",
     "beanquery==0.2.0",
     "beangulp>=0.2.0",
