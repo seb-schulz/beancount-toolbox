@@ -19,16 +19,10 @@
       },
       "extensions": [
         "redhat.vscode-yaml",
-        "Lencerf.beancount",
-        "openai.chatgpt",
-        "anthropic.claude-code"
+        "Lencerf.beancount"
       ]
     }
   },
-  "mounts": [
-    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
-  ],
   "runArgs": ["--userns=keep-id"],
   "containerUser": "vscode",
   // "onCreateCommand": "pipx install pip-tools ruff isort",
