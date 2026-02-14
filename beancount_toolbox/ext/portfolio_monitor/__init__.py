@@ -13,10 +13,6 @@ from .weight_allocation import weight_list
 from .weight_conversion import convert_amounts_to_percentages
 from .weight_parsing import parse_weight_directives
 
-if typing.TYPE_CHECKING:  # pragma: no cover
-    from flask.wrappers import Response
-
-
 InventoryOrDecimal = typing.Literal['Inventory'] | typing.Literal['Decimal']
 
 

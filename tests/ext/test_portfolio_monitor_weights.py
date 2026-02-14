@@ -1,12 +1,11 @@
 """Tests for portfolio weight allocation algorithm."""
-import pytest
 from decimal import Decimal
+
+import pytest
 from fava.core.tree import TreeNode
 
 from beancount_toolbox.ext.portfolio_monitor.weight_allocation import (
-    is_ancestor,
-    weight_list,
-)
+    is_ancestor, weight_list)
 
 
 def dummy_price_lookup(position, date):
@@ -409,11 +408,14 @@ class TestWeightListComplexScenarios:
         # Within US:ETrade, ITOT gets 70% of ETrade's allocation
         weight_entries = {
             "Assets": {
-                "Assets:US:ETrade:ITOT": Decimal("0.6"),  # ITOT gets 60% absolute
-                "Assets:International:VXUS": Decimal("0.4")  # International gets 40%
+                # ITOT gets 60% absolute
+                "Assets:US:ETrade:ITOT": Decimal("0.6"),
+                # International gets 40%
+                "Assets:International:VXUS": Decimal("0.4")
             },
             "Assets:US:ETrade": {
-                "Assets:US:ETrade:ITOT": Decimal("0.7")  # ITOT gets 70% of ETrade
+                # ITOT gets 70% of ETrade
+                "Assets:US:ETrade:ITOT": Decimal("0.7")
             }
         }
 
@@ -437,11 +439,12 @@ class TestAbsoluteAmountWeights:
 
     def test_single_absolute_amount(self):
         """Single child with absolute amount, others share remainder."""
-        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
-            convert_amounts_to_percentages
-        )
         from unittest.mock import MagicMock
+
         from fava.core.inventory import CounterInventory
+
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import \
+            convert_amounts_to_percentages
 
         # Create mock tree structure
         root = TreeNode("Assets:US:ETrade")
@@ -492,11 +495,12 @@ class TestAbsoluteAmountWeights:
 
     def test_mixed_absolute_and_percentage(self):
         """Mix of absolute amounts and percentage weights."""
-        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
-            convert_amounts_to_percentages
-        )
         from unittest.mock import MagicMock
+
         from fava.core.inventory import CounterInventory
+
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import \
+            convert_amounts_to_percentages
 
         root = TreeNode("Assets:US:ETrade")
         child1 = TreeNode("Assets:US:ETrade:ITOT")
@@ -547,11 +551,12 @@ class TestAbsoluteAmountWeights:
 
     def test_amount_exceeds_bucket_total(self):
         """Absolute amount exceeding bucket total should raise error."""
-        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
-            convert_amounts_to_percentages
-        )
         from unittest.mock import MagicMock
+
         from fava.core.inventory import CounterInventory
+
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import \
+            convert_amounts_to_percentages
 
         root = TreeNode("Assets:US:ETrade")
         child = TreeNode("Assets:US:ETrade:ITOT")
@@ -583,11 +588,12 @@ class TestAbsoluteAmountWeights:
 
     def test_bucket_with_zero_total(self):
         """Bucket with zero total should raise error for absolute amounts."""
-        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
-            convert_amounts_to_percentages
-        )
         from unittest.mock import MagicMock
+
         from fava.core.inventory import CounterInventory
+
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import \
+            convert_amounts_to_percentages
 
         root = TreeNode("Assets:US:ETrade")
         child = TreeNode("Assets:US:ETrade:ITOT")
@@ -618,11 +624,12 @@ class TestAbsoluteAmountWeights:
 
     def test_all_children_absolute_amounts(self):
         """All children with absolute amounts summing to bucket total."""
-        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import (
-            convert_amounts_to_percentages
-        )
         from unittest.mock import MagicMock
+
         from fava.core.inventory import CounterInventory
+
+        from beancount_toolbox.ext.portfolio_monitor.weight_conversion import \
+            convert_amounts_to_percentages
 
         root = TreeNode("Assets:US:ETrade")
         child1 = TreeNode("Assets:US:ETrade:ITOT")
@@ -671,7 +678,6 @@ class TestAbsoluteAmountWeights:
             "Assets:US:ETrade:VBMPX": Decimal("0.3"),
             "Assets:US:ETrade:VTI": Decimal("0.5")
         }
-
 
 
 class TestDateFiltering:

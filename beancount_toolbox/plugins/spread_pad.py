@@ -142,7 +142,6 @@ def create_pads(
         data.create_simple_posting(
             t, source_account, -amount_.number, amount_.currency)
 
-        number = remains.number
         r.append(t)
     return r
 
@@ -195,7 +194,8 @@ def process_account_entries(
         # Branch 5: Balance with pending pad (TRIGGER - generate padding)
         elif isinstance(entry_or_txn_posting, data.Balance) and pending_pad is not None and account == pending_pad.account:
             if period_start_directive is None:
-                raise ValueError("period_start_directive must be Open or Balance")
+                raise ValueError(
+                    "period_start_directive must be Open or Balance")
 
             # Calculate padding based only on balance difference
             current_balance = account_balance.get_currency_units(

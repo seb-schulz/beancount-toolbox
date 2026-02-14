@@ -34,7 +34,7 @@ Deduplication:
 
 import csv
 import re
-from typing import Any, Optional
+from typing import Optional
 
 from beancount.core import data
 from beangulp.importers.csvbase import Amount, Column, Date, Importer, Order
