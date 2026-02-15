@@ -79,6 +79,9 @@ class DKBImporter(Importer):
     payee = NormalizedColumn('Zahlungsempfänger*in')
     narration = NormalizedColumn('Verwendungszweck')
     link = Column('Kundenreferenz')
+    # For Eingang transactions
+    payer = NormalizedColumn('Zahlungspflichtige*r')
+    transaction_type = Column('Umsatztyp')  # Ausgang or Eingang
 
     def __init__(
         self,
@@ -203,6 +206,14 @@ class DKBImporter(Importer):
         link_value = row.link.strip() if hasattr(row, 'link') and row.link else ''
         links = {link_value.replace(' ', '')} if link_value else set()
 
+        # Determine correct payee based on transaction type
+        # For "Eingang" (income): payee is the payer (Zahlungspflichtige*r)
+        # For "Ausgang" (expense): payee is the recipient (Zahlungsempfänger*in, already set)
+        payee = txn.payee
+        if hasattr(row, 'transaction_type') and row.transaction_type and 'Eingang' in row.transaction_type:
+            if hasattr(row, 'payer') and row.payer:
+                payee = row.payer
+
         # Create placeholder posting for expense/income account
         placeholder_posting = data.Posting(
             account='Expenses:FIXME',
@@ -213,9 +224,9 @@ class DKBImporter(Importer):
             meta={},
         )
 
-        # Update transaction with cleaned links and placeholder posting
-        # Note: payee is already set from the 'payee' column (Zahlungsempfänger*in)
+        # Update transaction with cleaned links, corrected payee, and placeholder posting
         txn = txn._replace(
+            payee=payee,
             links=links,
             postings=list(txn.postings) + [placeholder_posting]
         )

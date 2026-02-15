@@ -1,19 +1,12 @@
 """Tests for DKB CSV importer."""
 
 import unittest
-
 from decimal import Decimal
-
 from os import path
-
-
 
 from beancount.core import data
 
-
-
 from beancount_toolbox.importers import Categorizer
-
 from beancount_toolbox.importers.dkb import DKBImporter
 
 
@@ -89,10 +82,19 @@ class TestDKBImporter(unittest.TestCase):
 
         transactions = [e for e in entries if isinstance(e, data.Transaction)]
 
-        # First transaction
+        # First transaction is `Ausgang`
         self.assertEqual(transactions[0].payee, 'Telekom Shop GmbH')
-        self.assertEqual(transactions[0].narration,
-                         'Mobilfunkrechnung Oktober 2025')
+        self.assertEqual(
+            transactions[0].narration,
+            'Mobilfunkrechnung Oktober 2025',
+        )
+
+        # Last transaction is `Eingang`
+        self.assertEqual(transactions[-1].payee, 'Erika Musterfrau')
+        self.assertEqual(
+            transactions[-1].narration,
+            'Miete Anteil WG',
+        )
 
     def test_link_from_kundenreferenz(self):
         """Test that Kundenreferenz is used as transaction link."""
@@ -261,16 +263,23 @@ class TestDKBImporter(unittest.TestCase):
         transactions = [e for e in entries if isinstance(e, data.Transaction)]
         self.assertEqual(len(transactions), 2)
 
-        # First transaction: Check payee with excessive spaces is normalized
+        # First transaction: "Eingang" (income) - payee is the payer (Zahlungspflichtige*r)
         first_txn = transactions[0]
-        self.assertEqual(first_txn.payee, 'Test Company Name Street')
+        self.assertEqual(first_txn.payee, 'Test Person')
         self.assertNotIn(
             '  ',  # No double spaces
             first_txn.payee  # type: ignore
         )
 
-        # Second transaction: Check narration with multiple spaces is normalized
+        # Second transaction: "Ausgang" (expense) - payee is the recipient (Zahlungsempfänger*in)
         second_txn = transactions[1]
+        self.assertEqual(second_txn.payee, 'Another Test Company')
+        self.assertNotIn(
+            '  ',  # No double spaces
+            second_txn.payee  # type: ignore
+        )
+
+        # Check narration with multiple spaces is normalized
         self.assertEqual(second_txn.narration, 'Test Payment December 2025')
         self.assertNotIn(
             '  ',  # No double spaces
