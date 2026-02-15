@@ -2,7 +2,6 @@
 "Zeitraum:";"01.10.2025 - 05.11.2025"
 "Kontostand vom 05.11.2025:";"1.789,23 €"
 ""
-
 "Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
 "03.11.25";"03.11.25";"Gebucht";"Max Mustermann";"Strom AG";"Abschlagszahlung November 2025";"Ausgang";"DE55500105170987654321";"-85,00";"DE11STR00000999888";"MAND2025";"PWR11025"
 "01.11.25";"01.11.25";"Gebucht";"KARTENINHABER";"Café Zentral, Musterstadt";"Kartenzahlung";"Ausgang";"DE77300209005555666777";"-8,50";"";"";""

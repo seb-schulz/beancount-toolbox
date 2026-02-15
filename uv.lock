@@ -73,7 +73,7 @@ wheels = [
 
 [[package]]
 name = "beancount-toolbox"
-version = "2.2.0"
+version = "2.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "beancount" },

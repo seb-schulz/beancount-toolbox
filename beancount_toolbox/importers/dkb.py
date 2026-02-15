@@ -71,7 +71,7 @@ class DKBImporter(Importer):
 
     # CSV file format configuration
     encoding = 'utf-8-sig'  # Handle UTF-8 BOM
-    skiplines = 5  # Skip 5 metadata/empty lines before column names
+    skiplines = 4  # Skip 4 metadata/empty lines before column names
     order = None  # Let csvbase auto-detect and normalize to ascending order
 
     date = Date('Buchungsdatum', frmt='%d.%m.%y')  # type: ignore[assignment]
