@@ -49,6 +49,15 @@ def auto_depreciation(entries, options_map, config=None):
     DEFAULT_EXPENSES_ACCOUNT = 'Expenses:Depreciation'
     DEFAULT_METHOD = 'linear'
     DEFAULT_RESIDUAL_VALUE = 0.0
+
+    COST_MISSING_ERROR = ("auto_depreciation: Posting is missing cost information. "
+                          "Add cost using lot pricing syntax, e.g., "
+                          "'Assets:Fixed:Laptop {1000.00 EUR, my-laptop, 2024-01-01}'")
+    COST_TYPE_ERROR = ("auto_depreciation: Posting cost must be a Cost object. "
+                       "CostSpec is not supported. Use explicit cost, "
+                       "e.g., {1000.00 EUR, my-laptop, 2024-01-01}")
+    USEFUL_LIFE_FORMAT_ERROR = ("auto_depreciation: 'useful_life' must be in format "
+                                "'<number><m|y>', e.g., '12m' or '5y'. Found: '")
     try:
         config_dict = eval(config or "")
     except (TypeError, SyntaxError):
@@ -83,6 +92,8 @@ def auto_depreciation(entries, options_map, config=None):
                         and is_child(posting.account)):
                     # Skip if cost is None
                     if posting.cost is None:
+                        errors.append(AutoDepreciationError(
+                            entry.meta, COST_MISSING_ERROR, entry))
                         continue
 
                     cost = posting.cost
@@ -94,6 +105,8 @@ def auto_depreciation(entries, options_map, config=None):
                         buy_date = cost.date
                     else:
                         # CostSpec doesn't have number, label, date - skip
+                        errors.append(AutoDepreciationError(
+                            entry.meta, COST_TYPE_ERROR, entry))
                         continue
 
                     try:
@@ -105,6 +118,11 @@ def auto_depreciation(entries, options_map, config=None):
                                  str.lower(posting.meta['useful_life']))
                     # Skip if useful_life format is invalid
                     if m is None:
+                        errors.append(AutoDepreciationError(
+                            entry.meta,
+                            USEFUL_LIFE_FORMAT_ERROR +
+                            posting.meta['useful_life'] + "'",
+                            entry))
                         continue
                     months_or_years = m.group(2)
                     months = int(m.group(1))

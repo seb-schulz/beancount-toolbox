@@ -13,7 +13,7 @@ from beancount_toolbox.plugins.auto_depreciation import auto_depreciation
 class TestAutoDepreciation(cmptest.TestCase):
     """Test cases for auto_depreciation plugin."""
 
-    @loader.load_doc(expect_errors=False)
+    @loader.load_doc(expect_errors=True)
     def test_posting_without_cost(self, entries, errors, options_map):
         """
         plugin "beancount_toolbox.plugins.auto_depreciation"
@@ -27,8 +27,8 @@ class TestAutoDepreciation(cmptest.TestCase):
             useful_life: "5y"
           Assets:Cash              -1000.00 USD
         """
-        # Should not crash, should handle gracefully - no errors expected since cost=None is handled
-        self.assertEqual(0, len(errors))
+        # Should report error for missing cost
+        self.assertEqual(1, len(errors))
 
     @loader.load_doc(expect_errors=True)
     def test_invalid_useful_life_format(self, entries, errors, options_map):
@@ -166,9 +166,9 @@ class TestAutoDepreciation(cmptest.TestCase):
 
         options_map = {}
 
-        # Should not crash
+        # Should report error for missing cost
         result_entries, result_errors = auto_depreciation(entries, options_map)
-        self.assertEqual(0, len(result_errors))
+        self.assertEqual(1, len(result_errors))
 
     def test_direct_call_invalid_useful_life(self):
         """Test direct plugin call with invalid useful_life format."""
@@ -193,9 +193,9 @@ class TestAutoDepreciation(cmptest.TestCase):
 
         options_map = {}
 
-        # Should not crash
+        # Should report error for invalid useful_life
         result_entries, result_errors = auto_depreciation(entries, options_map)
-        self.assertEqual(0, len(result_errors))
+        self.assertEqual(1, len(result_errors))
 
 
 if __name__ == '__main__':
