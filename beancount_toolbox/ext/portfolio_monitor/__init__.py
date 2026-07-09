@@ -94,7 +94,10 @@ class Row:
 
     @property
     def units(self) -> inventory.SimpleCounterInventory:
-        return conversion.units(self.balance)
+        result = inventory.SimpleCounterInventory()
+        for pos in self.balance.positions():
+            result.add(pos.units.currency, pos.units.number)
+        return result
 
     @property
     def target_allocation(self) -> Decimal | None:
