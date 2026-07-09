@@ -7,6 +7,7 @@ from collections import namedtuple
 from beancount import loader
 from beancount.core import account, amount, convert, data, getters
 from beancount.core.number import D
+from beancount.core.position import Cost
 from decimal import Decimal
 from beancount.parser import printer
 from dateutil.relativedelta import relativedelta
@@ -80,17 +81,31 @@ def auto_depreciation(entries, options_map, config=None):
 
                 if (posting.meta and 'useful_life' in posting.meta
                         and is_child(posting.account)):
+                    # Skip if cost is None
+                    if posting.cost is None:
+                        continue
+
                     cost = posting.cost
-                    currency = cost.currency
-                    original_value = D(cost.number)
+                    # Handle both Cost and CostSpec types
+                    if isinstance(cost, Cost):
+                        currency = cost.currency
+                        original_value = D(cost.number)
+                        label = cost.label
+                        buy_date = cost.date
+                    else:
+                        # CostSpec doesn't have number, label, date - skip
+                        continue
+
                     try:
                         end_value = D(posting.meta['residual_value'])
                     except KeyError:
                         end_value = DEFAULT_RESIDUAL_VALUE
-                    label = cost.label
-                    buy_date = cost.date
+
                     m = re.match(r'([0-9]+)([my])',
                                  str.lower(posting.meta['useful_life']))
+                    # Skip if useful_life format is invalid
+                    if m is None:
+                        continue
                     months_or_years = m.group(2)
                     months = int(m.group(1))
                     if months_or_years == 'y':
@@ -121,13 +136,13 @@ def auto_depreciation(entries, options_map, config=None):
     # Create Open directives for new subaccounts if necessary.
     oc_map = getters.get_account_open_close(entries)
 
-    if new_accounts:
+    if new_accounts and depreciation_entries:
         open_date = depreciation_entries[0].date
         meta = data.new_metadata('<auto_depreciation>', 0)
         open_entries = []
         for new_account in new_accounts:
             if new_account not in oc_map:
-                entry = data.Open(meta, open_date, new_account, None, None)
+                entry = data.Open(meta, open_date, new_account, [], None)
                 open_entries.append(entry)
     else:
         open_entries = []
