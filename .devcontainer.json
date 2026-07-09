@@ -1,29 +1,10 @@
 {
-  "name": "beancount-toolbox",
-  "image": "ghcr.io/sebatec-eu/python-devcontainer:1",
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "os-provided",
-      "toolsToInstall": "ruff,isort,pytest"
-    }
-  },
+  "image": "forge.sebatec.eu/sebatec-eu/devcontainers/standard:1",
   "customizations": {
     "vscode": {
-      "settings": {
-        "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.terminal.activateEnvironment": true,
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
-        "editor.codeActionsOnSave": {
-          "source.organizeImports": "explicit"
-        }
-      },
-      "extensions": [
-        "redhat.vscode-yaml",
-        "Lencerf.beancount"
-      ]
+      "extensions": ["redhat.vscode-yaml", "Lencerf.beancount"]
     }
   },
-  "runArgs": ["--userns=keep-id"],
   "containerUser": "vscode",
   // "onCreateCommand": "pipx install pip-tools ruff isort",
   "postCreateCommand": "make setup"
