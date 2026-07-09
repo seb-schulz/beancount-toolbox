@@ -6,7 +6,8 @@ from collections import namedtuple
 
 from beancount import loader
 from beancount.core import account, amount, convert, data, getters
-from beancount.core.number import D, Decimal
+from beancount.core.number import D
+from decimal import Decimal
 from beancount.parser import printer
 from dateutil.relativedelta import relativedelta
 from dateutil.utils import today
@@ -48,7 +49,7 @@ def auto_depreciation(entries, options_map, config=None):
     DEFAULT_METHOD = 'linear'
     DEFAULT_RESIDUAL_VALUE = 0.0
     try:
-        config_dict = eval(config)
+        config_dict = eval(config or "")
     except (TypeError, SyntaxError):
         config_dict = {}
     try:

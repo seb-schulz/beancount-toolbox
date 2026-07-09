@@ -1,11 +1,11 @@
 import unittest
 from beancount import loader
 from beancount.parser import cmptest
+from beancount.core import data
 
 
 class TestDocuments(cmptest.TestCase):
 
-    @unittest.SkipTest
     @loader.load_doc(expect_errors=False)
     def test_valid_beanfile_without_tags(self, entries, errors, __):
         """
@@ -20,7 +20,13 @@ class TestDocuments(cmptest.TestCase):
             Assets:Other         -1.00 USD
         """
         self.assertEqual(0, len(errors))
-        self.assertEqual(3, len(entries))
+        self.assertEqualEntries(
+            '''
+            plugin "beancount_toolbox.plugins.filter_tags" "foo"
+            plugin "beancount.plugins.auto_accounts"
+            ''',
+            entries,
+        )
 
     @loader.load_doc(expect_errors=False)
     def test_filtered_beanfile(self, entries, errors, __):
@@ -79,6 +85,28 @@ class TestDocuments(cmptest.TestCase):
             ''',
             entries,
         )
+
+    @loader.load_doc(expect_errors=False)
+    def test_filtered_beanfile_multiple_tags(self, entries, errors, __):
+        """
+        plugin "beancount_toolbox.plugins.filter_tags" "foo bar"
+        plugin "beancount.plugins.auto_accounts"
+
+        2011-05-17 * "Only bar" #bar
+            Expenses:Food   1.00 USD
+            Assets:Other   -1.00 USD
+
+        2011-05-18 * "Only foo" #foo
+            Expenses:Food   1.00 USD
+            Assets:Other   -1.00 USD
+
+        2011-05-19 * "Both" #foo #bar
+            Expenses:Food   1.00 USD
+            Assets:Other   -1.00 USD
+        """
+        self.assertEqual(0, len(errors))
+        self.assertEqual(
+            1, len([e for e in entries if isinstance(e, data.Transaction)]))
 
 
 if __name__ == '__main__':
